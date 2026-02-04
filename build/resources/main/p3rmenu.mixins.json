@@ -1,0 +1,14 @@
+{
+    "required": true,
+    "package": "com.amnedev.p3rmenu.mixin",
+    "compatibilityLevel": "JAVA_17",
+    "mixins": [
+        "TitleScreenMixin",
+        "ScreenMixin",
+        "MouseMixin",
+        "MinecraftClientMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

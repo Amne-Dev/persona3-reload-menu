@@ -1,0 +1,38 @@
+{
+  "mappings": {
+    "com/amnedev/p3rmenu/mixin/MinecraftClientMixin": {
+      "render": "Lnet/minecraft/class_310;method_1523(Z)V"
+    },
+    "com/amnedev/p3rmenu/mixin/MouseMixin": {
+      "onMouseButton": "Lnet/minecraft/class_312;method_1601(JLnet/minecraft/class_11910;I)V"
+    },
+    "com/amnedev/p3rmenu/mixin/ScreenMixin": {
+      "init(Lnet/minecraft/client/MinecraftClient;II)V": "Lnet/minecraft/class_437;init(Lnet/minecraft/class_310;II)V",
+      "render": "Lnet/minecraft/class_437;method_25394(Lnet/minecraft/class_332;IIF)V",
+      "renderBackground(Lnet/minecraft/client/gui/DrawContext;)V": "Lnet/minecraft/class_437;renderBackground(Lnet/minecraft/class_332;)V"
+    },
+    "com/amnedev/p3rmenu/mixin/TitleScreenMixin": {
+      "init": "Lnet/minecraft/class_442;method_25426()V",
+      "render": "Lnet/minecraft/class_442;method_25394(Lnet/minecraft/class_332;IIF)V"
+    }
+  },
+  "data": {
+    "named:intermediary": {
+      "com/amnedev/p3rmenu/mixin/MinecraftClientMixin": {
+        "render": "Lnet/minecraft/class_310;method_1523(Z)V"
+      },
+      "com/amnedev/p3rmenu/mixin/MouseMixin": {
+        "onMouseButton": "Lnet/minecraft/class_312;method_1601(JLnet/minecraft/class_11910;I)V"
+      },
+      "com/amnedev/p3rmenu/mixin/ScreenMixin": {
+        "init(Lnet/minecraft/client/MinecraftClient;II)V": "Lnet/minecraft/class_437;init(Lnet/minecraft/class_310;II)V",
+        "render": "Lnet/minecraft/class_437;method_25394(Lnet/minecraft/class_332;IIF)V",
+        "renderBackground(Lnet/minecraft/client/gui/DrawContext;)V": "Lnet/minecraft/class_437;renderBackground(Lnet/minecraft/class_332;)V"
+      },
+      "com/amnedev/p3rmenu/mixin/TitleScreenMixin": {
+        "init": "Lnet/minecraft/class_442;method_25426()V",
+        "render": "Lnet/minecraft/class_442;method_25394(Lnet/minecraft/class_332;IIF)V"
+      }
+    }
+  }
+}

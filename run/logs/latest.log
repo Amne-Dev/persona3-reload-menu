@@ -1,0 +1,166 @@
+[03:30:27] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.7
+[03:30:28] [main/INFO] (FabricLoader) Loading 47 mods:
+	- fabric-api 0.85.0+1.20.1
+	- fabric-api-base 0.4.29+b04edc7a77
+	- fabric-api-lookup-api-v1 1.6.34+4d8536c977
+	- fabric-biome-api-v1 13.0.10+b3afc78b77
+	- fabric-block-api-v1 1.0.9+e022e5d177
+	- fabric-blockrenderlayer-v1 1.1.39+b3afc78b77
+	- fabric-client-tags-api-v1 1.1.0+97bb207577
+	- fabric-command-api-v2 2.2.11+b3afc78b77
+	- fabric-content-registries-v0 4.0.8+b3afc78b77
+	- fabric-convention-tags-v1 1.5.3+b3afc78b77
+	- fabric-crash-report-info-v1 0.2.18+aeb40ebe77
+	- fabric-data-generation-api-v1 12.1.12+b3afc78b77
+	- fabric-dimensions-v1 2.1.51+b3afc78b77
+	- fabric-entity-events-v1 1.5.21+b3afc78b77
+	- fabric-events-interaction-v0 0.6.0+b3afc78b77
+	- fabric-game-rule-api-v1 1.0.38+b04edc7a77
+	- fabric-gametest-api-v1 1.2.11+b3afc78b77
+	- fabric-item-api-v1 2.1.26+b3afc78b77
+	- fabric-item-group-api-v1 4.0.8+40e50c4677
+	- fabric-key-binding-api-v1 1.0.36+fb8d95da77
+	- fabric-lifecycle-events-v1 2.2.20+b3afc78b77
+	- fabric-loot-api-v2 1.1.38+b3afc78b77
+	- fabric-message-api-v1 5.1.6+b3afc78b77
+	- fabric-mining-level-api-v1 2.1.48+b3afc78b77
+	- fabric-models-v0 0.3.35+b3afc78b77
+	- fabric-networking-api-v1 1.3.8+b3afc78b77
+	- fabric-object-builder-api-v1 11.1.0+6beca84877
+	- fabric-particles-v1 1.1.0+201a23a077
+	- fabric-recipe-api-v1 1.0.18+b3afc78b77
+	- fabric-registry-sync-v0 2.2.6+b3afc78b77
+	- fabric-renderer-api-v1 3.1.0+c154966e77
+	- fabric-renderer-indigo 1.4.0+c154966e77
+	- fabric-rendering-data-attachment-v1 0.3.33+b3afc78b77
+	- fabric-rendering-fluids-v1 3.0.26+b3afc78b77
+	- fabric-rendering-v1 3.0.6+b3afc78b77
+	- fabric-resource-conditions-api-v1 2.3.5+ea08f9d877
+	- fabric-resource-loader-v0 0.11.8+e3d6ed2577
+	- fabric-screen-api-v1 2.0.6+b3afc78b77
+	- fabric-screen-handler-api-v1 1.3.27+b3afc78b77
+	- fabric-sound-api-v1 1.0.12+b3afc78b77
+	- fabric-transfer-api-v1 3.2.3+43a3fedd77
+	- fabric-transitive-access-wideners-v1 4.2.0+b3afc78b77
+	- fabricloader 0.15.7
+	- java 21
+	- minecraft 1.20.1
+	- mixinextras 0.3.5
+	- p3rmenu 1.0.0
+[03:30:28] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/C:/Users/amdev/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
+[03:30:29] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[03:30:29] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
+[03:30:29] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[03:30:34] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.5).
+[03:30:48] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 802 milliseconds
+[03:30:54] [Render thread/INFO] (Minecraft) [STDERR]: [LWJGL] [ThreadLocalUtil] Unsupported JNI version detected, this may result in a crash. Please inform LWJGL developers.
+[03:30:55] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[03:30:56] [Render thread/ERROR] (Minecraft) Failed to verify authentication
+com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
+	at com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:56) ~[authlib-4.0.43.jar:?]
+	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:156) ~[authlib-4.0.43.jar:?]
+	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.<init>(YggdrasilUserApiService.java:55) ~[authlib-4.0.43.jar:?]
+	at com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService.createUserApiService(YggdrasilAuthenticationService.java:124) ~[authlib-4.0.43.jar:?]
+	at net.minecraft.client.MinecraftClient.createUserApiService(MinecraftClient.java:733) ~[minecraft-merged-e2200bfc56-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar:?]
+	at net.minecraft.client.MinecraftClient.<init>(MinecraftClient.java:442) ~[minecraft-merged-e2200bfc56-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar:?]
+	at net.minecraft.client.main.Main.main(Main.java:211) ~[minecraft-merged-e2200bfc56-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470) ~[fabric-loader-0.15.7.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.7.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.7.jar:?]
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
+Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 401
+	at com.mojang.authlib.minecraft.client.MinecraftClient.readInputStream(MinecraftClient.java:85) ~[authlib-4.0.43.jar:?]
+	at com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:48) ~[authlib-4.0.43.jar:?]
+	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:129) ~[authlib-4.0.43.jar:?]
+	... 9 more
+[03:30:56] [Render thread/INFO] (Minecraft) Setting user: Player791
+[03:30:57] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
+[03:30:58] [Render thread/INFO] (Minecraft) Backend library: LWJGL version 3.3.2-snapshot
+[03:31:02] [Render thread/INFO] (Minecraft) Reloading ResourceManager: vanilla, fabric (fabric-gametest-api-v1, fabric-transfer-api-v1, fabric-blockrenderlayer-v1, fabric-item-group-api-v1, fabric-command-api-v2, fabric-rendering-data-attachment-v1, fabric-networking-api-v1, fabric-resource-conditions-api-v1, fabric-api, fabric-lifecycle-events-v1, fabric-object-builder-api-v1, fabric-events-interaction-v0, fabric-transitive-access-wideners-v1, fabric-biome-api-v1, fabric-client-tags-api-v1, fabric-message-api-v1, fabric-resource-loader-v0, fabric-item-api-v1, fabric-entity-events-v1, fabric-rendering-fluids-v1, fabric-particles-v1, fabric-models-v0, fabric-recipe-api-v1, fabric-data-generation-api-v1, fabric-renderer-api-v1, fabric-content-registries-v0, fabricloader, fabric-dimensions-v1, fabric-game-rule-api-v1, fabric-rendering-v1, fabric-block-api-v1, fabric-api-lookup-api-v1, fabric-crash-report-info-v1, fabric-sound-api-v1, fabric-key-binding-api-v1, fabric-renderer-indigo, fabric-screen-handler-api-v1, fabric-loot-api-v2, fabric-registry-sync-v0, fabric-mining-level-api-v1, p3rmenu, fabric-screen-api-v1, fabric-convention-tags-v1, fabric-api-base)
+[03:31:03] [Worker-Main-3/INFO] (Minecraft) Found unifont_all_no_pua-15.0.06.hex, loading
+[03:31:04] [Realms Notification Availability checker #1/INFO] (Minecraft) Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC
+[03:31:08] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:item.goat_horn.play
+[03:31:08] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[03:31:09] [Render thread/INFO] (Minecraft) OpenAL initialized on device OpenAL Soft on Speaker (Jabra Evolve2 40)
+[03:31:09] [Render thread/INFO] (Minecraft) Sound engine started
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[03:31:09] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[03:31:10] [Render thread/WARN] (Minecraft) Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[03:31:10] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[03:31:10] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[03:31:10] [Render thread/INFO] (Minecraft) Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[03:31:27] [Render thread/INFO] (Minecraft) Connecting to blocksmc.com, 25565
+[03:31:29] [Render thread/WARN] (Minecraft) Unknown feature flag: minecraft:update_1_21
+[03:31:29] [Render thread/WARN] (Minecraft) Unknown feature flag: minecraft:winter_drop
+[03:31:30] [Render thread/WARN] (Minecraft) Ignoring player info update for unknown player fe7f1e59-f19d-3f45-941b-fff40e9a414c
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] 
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] /login <password>
+[03:31:30] [Render thread/INFO] (Minecraft) [System] [CHAT] If you lost the password type /resetpassword
+[03:31:30] [Render thread/INFO] (Minecraft) Loaded 2 advancements
+[03:31:30] [Render thread/WARN] (Minecraft) Ignoring player info update for unknown player c7ff1b62-9d6d-3f76-a8cd-2b8ceeeb7a7c
+[03:31:31] [Render thread/WARN] (Minecraft) Ignoring player info update for unknown player 5bf8d9d1-485c-3b3a-a03e-c4799c3e0d37
+[03:31:39] [Render thread/INFO] (Minecraft) Loaded 7 recipes
+[03:31:39] [Render thread/INFO] (Minecraft) Loaded 1271 advancements
+[03:31:39] [Render thread/WARN] (Minecraft) Not all defined tags for registry ResourceKey[minecraft:root / minecraft:block] are present in data pack: minecraft:air, minecraft:armadillo_spawnable_on, minecraft:badlands_terracotta, minecraft:bats_spawnable_on, minecraft:bee_attractive, minecraft:blocks_wind_charge_explosions, minecraft:camel_sand_step_sound_blocks, minecraft:camels_spawnable_on, minecraft:concrete_powder, minecraft:does_not_block_hoppers, minecraft:dry_vegetation_may_place_on, minecraft:edible_for_sheep, minecraft:happy_ghast_avoids, minecraft:incorrect_for_diamond_tool, minecraft:incorrect_for_gold_tool, minecraft:incorrect_for_iron_tool, minecraft:incorrect_for_netherite_tool, minecraft:incorrect_for_stone_tool, minecraft:incorrect_for_wooden_tool, minecraft:mob_interactable_doors, minecraft:pale_oak_logs, minecraft:replaceable_by_mushrooms, minecraft:sword_instantly_mines, minecraft:triggers_ambient_desert_dry_vegetation_block_sounds, minecraft:triggers_ambient_desert_sand_block_sounds, minecraft:triggers_ambient_dried_ghast_block_sounds
+[03:31:39] [Render thread/WARN] (Minecraft) Not all defined tags for registry ResourceKey[minecraft:root / minecraft:enchantment] are present in data pack: minecraft:curse, minecraft:double_trade_price, minecraft:exclusive_set/armor, minecraft:exclusive_set/boots, minecraft:exclusive_set/bow, minecraft:exclusive_set/crossbow, minecraft:exclusive_set/damage, minecraft:exclusive_set/mining, minecraft:exclusive_set/riptide, minecraft:in_enchanting_table, minecraft:non_treasure, minecraft:on_mob_spawn_equipment, minecraft:on_random_loot, minecraft:on_traded_equipment, minecraft:prevents_bee_spawns_when_mining, minecraft:prevents_decorated_pot_shattering, minecraft:prevents_ice_melting, minecraft:prevents_infested_spawns, minecraft:smelts_loot, minecraft:tooltip_order, minecraft:tradeable, minecraft:treasure
+[03:31:39] [Render thread/WARN] (Minecraft) Not all defined tags for registry ResourceKey[minecraft:root / minecraft:banner_pattern] are present in data pack: minecraft:pattern_item/bordure_indented, minecraft:pattern_item/field_masoned, minecraft:pattern_item/flow, minecraft:pattern_item/guster
+[03:31:39] [Render thread/WARN] (Minecraft) Not all defined tags for registry ResourceKey[minecraft:root / minecraft:item] are present in data pack: minecraft:armadillo_food, minecraft:axolotl_food, minecraft:bee_food, minecraft:book_cloning_target, minecraft:brewing_fuel, minecraft:bundles, minecraft:camel_food, minecraft:cat_food, minecraft:chest_armor, minecraft:chicken_food, minecraft:cow_food, minecraft:diamond_tool_materials, minecraft:drowned_preferred_weapons, minecraft:duplicates_allays, minecraft:dyeable, minecraft:eggs, minecraft:enchantable/armor, minecraft:enchantable/bow, minecraft:enchantable/chest_armor, minecraft:enchantable/crossbow, minecraft:enchantable/durability, minecraft:enchantable/equippable, minecraft:enchantable/fire_aspect, minecraft:enchantable/fishing, minecraft:enchantable/foot_armor, minecraft:enchantable/head_armor, minecraft:enchantable/leg_armor, minecraft:enchantable/mace, minecraft:enchantable/mining, minecraft:enchantable/mining_loot, minecraft:enchantable/sharp_weapon, minecraft:enchantable/sword, minecraft:enchantable/trident, minecraft:enchantable/vanishing, minecraft:enchantable/weapon, minecraft:foot_armor, minecraft:frog_food, minecraft:furnace_minecart_fuel, minecraft:gaze_disguise_equipment, minecraft:goat_food, minecraft:gold_tool_materials, minecraft:happy_ghast_food, minecraft:happy_ghast_tempt_items, minecraft:harnesses, minecraft:head_armor, minecraft:hoglin_food, minecraft:horse_food, minecraft:horse_tempt_items, minecraft:iron_tool_materials, minecraft:leg_armor, minecraft:llama_food, minecraft:llama_tempt_items, minecraft:map_invisibility_equipment, minecraft:meat, minecraft:netherite_tool_materials, minecraft:ocelot_food, minecraft:pale_oak_logs, minecraft:panda_eats_from_ground, minecraft:panda_food, minecraft:parrot_food, minecraft:parrot_poisonous_food, minecraft:pig_food, minecraft:piglin_preferred_weapons, minecraft:piglin_safe_armor, minecraft:pillager_preferred_weapons, minecraft:rabbit_food, minecraft:repairs_chain_armor, minecraft:repairs_diamond_armor, minecraft:repairs_gold_armor, minecraft:repairs_iron_armor, minecraft:repairs_leather_armor, minecraft:repairs_netherite_armor, minecraft:repairs_turtle_helmet, minecraft:repairs_wolf_armor, minecraft:sheep_food, minecraft:shulker_boxes, minecraft:skeleton_preferred_weapons, minecraft:skulls, minecraft:strider_food, minecraft:strider_tempt_items, minecraft:turtle_food, minecraft:villager_picks_up, minecraft:wither_skeleton_disliked_weapons, minecraft:wolf_food, minecraft:wooden_tool_materials
+[03:31:39] [Render thread/WARN] (Minecraft) Not all defined tags for registry ResourceKey[minecraft:root / minecraft:entity_type] are present in data pack: minecraft:aquatic, minecraft:arthropod, minecraft:boat, minecraft:can_breathe_under_water, minecraft:can_equip_harness, minecraft:can_equip_saddle, minecraft:can_turn_in_boats, minecraft:can_wear_horse_armor, minecraft:deflects_projectiles, minecraft:followable_friendly_mobs, minecraft:ignores_poison_and_regen, minecraft:illager, minecraft:illager_friends, minecraft:immune_to_infested, minecraft:immune_to_oozing, minecraft:inverted_healing_and_harm, minecraft:no_anger_from_wind_charge, minecraft:non_controlling_rider, minecraft:not_scary_for_pufferfish, minecraft:redirectable_projectile, minecraft:sensitive_to_bane_of_arthropods, minecraft:sensitive_to_impaling, minecraft:sensitive_to_smite, minecraft:undead, minecraft:wither_friends, minecraft:zombies
+[03:31:56] [Render thread/INFO] (Minecraft) Stopping!

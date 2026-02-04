@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "p3rmenu",
+  "version": "1.0.0",
+  "name": "Persona 3 Reload Menu",
+  "description": "A Persona 3 Reload inspired main menu mixin.",
+  "authors": [
+    "AmDev"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/FabricMC/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "icon": "assets/p3rmenu/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": []
+  },
+  "mixins": [
+    "p3rmenu.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.21",
+    "minecraft": ">=1.20",
+    "java": ">=17"
+  }
+}
