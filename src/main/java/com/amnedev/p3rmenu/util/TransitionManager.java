@@ -3,7 +3,12 @@ package com.amnedev.p3rmenu.util;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
+
+import java.util.Locale;
 
 public class TransitionManager {
     public static final int TRANSITION_NONE = 0;
@@ -13,21 +18,30 @@ public class TransitionManager {
     private static int transitionType = TRANSITION_NONE;
     private static float transitionProgress = 0.0f;
     private static Runnable queuedAction = null;
+    private static String transitionLabel = "";
     
     // Config
-    private static final int COLOR_BLUE_STRIP = 0xFF0044FF; 
-    private static final int SKEW_OFFSET = 100;
+    private static final int COLOR_BLUE = 0xFF0647E6;
+    private static final int COLOR_DEEP_BLUE = 0xFF071C70;
+    private static final int COLOR_CYAN = 0xFF58E7FF;
 
     private static long lastTime = 0;
-    private static final float ANIMATION_DURATION = 500f; // ms
+    private static final float OUT_DURATION = 430.0F;
+    private static final float IN_DURATION = 520.0F;
 
     private static Runnable pendingExecution = null;
 
     public static void startOut(Runnable action) {
+        startOut(null, action);
+    }
+
+    public static void startOut(Text label, Runnable action) {
         transitionType = TRANSITION_OUT;
         transitionProgress = 0.0f;
         queuedAction = action;
-        lastTime = System.currentTimeMillis();
+        transitionLabel = label == null ? "" : label.getString().strip().toUpperCase(Locale.ROOT);
+        pendingExecution = null;
+        lastTime = Util.getMeasuringTimeMs();
     }
 
     public static void checkPendingExecution() {
@@ -35,6 +49,17 @@ public class TransitionManager {
             Runnable action = pendingExecution;
             pendingExecution = null;
             action.run();
+
+            // Opening a world closes the final menu instead of initializing a new
+            // Screen, so ScreenMixin never gets a chance to start the reveal. Do
+            // not leave the global input hooks latched in that state.
+            if (transitionType == TRANSITION_OUT) {
+                if (MinecraftClient.getInstance().currentScreen == null) {
+                    clear();
+                } else {
+                    startIn();
+                }
+            }
         }
     }
 
@@ -42,7 +67,8 @@ public class TransitionManager {
         transitionType = TRANSITION_IN;
         transitionProgress = 0.0f;
         queuedAction = null;
-        lastTime = System.currentTimeMillis();
+        transitionLabel = "";
+        lastTime = Util.getMeasuringTimeMs();
     }
 
     public static boolean isTransitioning() {
@@ -50,31 +76,52 @@ public class TransitionManager {
     }
 
     public static boolean isBlockingInput() {
-        return transitionType == TRANSITION_OUT;
+        // These transitions belong to GUI screens only. Gameplay must never be
+        // blocked by a stale menu animation, even if another mod changes screens
+        // without passing through Screen.init.
+        return transitionType != TRANSITION_NONE
+                && MinecraftClient.getInstance().currentScreen != null;
+    }
+
+    public static void clear() {
+        transitionType = TRANSITION_NONE;
+        transitionProgress = 0.0F;
+        queuedAction = null;
+        pendingExecution = null;
+        transitionLabel = "";
+        lastTime = 0L;
     }
 
     public static void render(DrawContext context, float delta, int width, int height) {
         if (transitionType == TRANSITION_NONE) return;
 
-        // Update Progress using real time
-        long now = System.currentTimeMillis();
-        long elapsed = now - lastTime;
-        lastTime = now;
-        
-        // Safety for long pauses (loading screens)
-        if (elapsed > 100) elapsed = 16; 
-
-        transitionProgress += (float) (elapsed / ANIMATION_DURATION);
+        // Derive progress from the transition start. Incremental frame deltas made
+        // wipes crawl (and input appear frozen) whenever Minecraft throttled an
+        // unfocused window to a very low frame rate.
+        long now = Util.getMeasuringTimeMs();
+        float duration = transitionType == TRANSITION_OUT ? OUT_DURATION : IN_DURATION;
+        transitionProgress = MathHelper.clamp((now - lastTime) / duration, 0.0F, 1.0F);
 
         if (transitionProgress >= 1.0f) {
             transitionProgress = 1.0f;
 
             if (transitionType == TRANSITION_OUT) {
                 if (queuedAction != null) {
-                    // Store for execution at start of next frame
-                    pendingExecution = queuedAction;
+                    // setScreen is safe on the render thread. Dispatching at the
+                    // covered edge avoids relying on another MinecraftClient frame
+                    // hook, which could leave the wipe and GUI input latched forever.
+                    Runnable action = queuedAction;
+                    queuedAction = null;
+                    action.run();
+                    if (MinecraftClient.getInstance().currentScreen == null) {
+                        clear();
+                    } else if (transitionType == TRANSITION_OUT) {
+                        startIn();
+                    }
+                    return;
                 }
-                queuedAction = null; 
+                clear();
+                return;
             } else {
                 // IN Complete
                 transitionType = TRANSITION_NONE;
@@ -89,50 +136,85 @@ public class TransitionManager {
 
         int w = width;
         int h = height;
-        int gradientWidth = 300;
-        int solidWidth = w + gradientWidth;
+        int edgeWidth = Math.max(110, Math.min(340, w / 3));
+        int skewOffset = Math.max(48, Math.min(132, h / 5));
+        int solidWidth = w + edgeWidth + skewOffset + 8;
 
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
 
         if (transitionType == TRANSITION_OUT) {
-            // Wiping ON from Right
-            float t = transitionProgress;
-            t = 1.0f - (1.0f - t) * (1.0f - t); // Ease Out
-            
-            int startX = (int) (w - (w + gradientWidth) * t);
-            
-            // Draw Gradient Leading Edge
-            P3RHelper.drawGradientSkewedRect(context, startX, 0, gradientWidth, h, SKEW_OFFSET, 
-                    0x000044FF, // Transparent
-                    COLOR_BLUE_STRIP | 0xFF000000 // Solid
-            );
-            
-            // Draw Solid Block
-            context.fill(startX + gradientWidth, 0, startX + gradientWidth + solidWidth, h, COLOR_BLUE_STRIP | 0xFF000000);
-            
+            float t = easeInOutCubic(transitionProgress);
+            int startX = (int) (w - (w + edgeWidth + skewOffset) * t);
+
+            // A dark under-slice and a thin cyan glint give the wipe the layered,
+            // cut-paper movement used throughout P3R without tying it to a background.
+            P3RHelper.drawSkewedRect(context, startX - 34, 0,
+                    edgeWidth + 42, h, skewOffset, withAlpha(COLOR_DEEP_BLUE, 0xB8));
+            P3RHelper.drawSkewedRect(context, startX - 10, 0,
+                    24, h, skewOffset, withAlpha(COLOR_CYAN, 0xD8));
+            P3RHelper.drawGradientSkewedRect(context, startX, 0, edgeWidth, h, skewOffset,
+                    0x000647E6, COLOR_BLUE);
+            context.fill(startX + edgeWidth, 0,
+                    startX + edgeWidth + solidWidth, h, COLOR_BLUE);
+            renderTransitionType(context, startX, edgeWidth, w, h);
+
         } else if (transitionType == TRANSITION_IN) {
-            // Wiping OFF to Left
-            float t = transitionProgress;
-            t = 1.0f - (1.0f - t) * (1.0f - t); // Ease Out
-            
-            int solidEndX = (int) (w - (w + gradientWidth) * t);
-            
-            // Draw Solid Block
-            // Ensure it covers enough to the left
-            context.fill(solidEndX - solidWidth, 0, solidEndX, h, COLOR_BLUE_STRIP | 0xFF000000);
-            
-            // Draw Gradient Trailing Edge
-            // Offset X by -SKEW_OFFSET because the Skewed Rect Top-Left is at (X + Skew),
-            // creating a gap if we draw at solidEndX.
-            // By shifting left, the Top-Left becomes (solidEndX - Skew + Skew) = solidEndX, matching the solid block.
-            P3RHelper.drawGradientSkewedRect(context, solidEndX - SKEW_OFFSET, 0, gradientWidth, h, SKEW_OFFSET, 
-                    COLOR_BLUE_STRIP | 0xFF000000, 
-                    0x000044FF
-            );
+            float t = easeOutExpo(transitionProgress);
+            int solidEndX = (int) (w - (w + edgeWidth + skewOffset) * t);
+
+            context.fill(solidEndX - solidWidth, 0, solidEndX, h, COLOR_BLUE);
+            P3RHelper.drawGradientSkewedRect(context, solidEndX - skewOffset, 0,
+                    edgeWidth, h, skewOffset, COLOR_BLUE, 0x000647E6);
+            P3RHelper.drawSkewedRect(context, solidEndX + edgeWidth - 12, 0,
+                    18, h, skewOffset, withAlpha(COLOR_CYAN, 0xA8));
+            P3RHelper.drawSkewedRect(context, solidEndX + edgeWidth + 12, 0,
+                    34, h, skewOffset, withAlpha(COLOR_DEEP_BLUE, 0x6B));
         }
 
         RenderSystem.disableBlend();
         context.getMatrices().pop();
+    }
+
+    private static void renderTransitionType(DrawContext context, int wipeX,
+            int edgeWidth, int width, int height) {
+        if (transitionLabel.isBlank()) {
+            return;
+        }
+
+        String fragment = transitionLabel.substring(0, Math.min(4, transitionLabel.length()));
+        float phase = MathHelper.clamp((transitionProgress - 0.10F) / 0.72F, 0.0F, 1.0F);
+        int alpha = MathHelper.clamp(Math.round(185.0F * (float) Math.sin(Math.PI * phase)), 0, 185);
+        if (alpha <= 0) {
+            return;
+        }
+
+        Text text = Text.literal(fragment).setStyle(Style.EMPTY.withBold(true));
+        float scale = MathHelper.clamp(height / 38.0F, 7.0F, 15.0F);
+        float x = wipeX + edgeWidth * 0.20F;
+        float y = height * 0.52F - 5.0F * scale;
+
+        context.getMatrices().push();
+        context.getMatrices().translate(x, y, 510.0F);
+        context.getMatrices().scale(scale, scale, 1.0F);
+        int shadow = (Math.min(150, alpha) << 24) | 0x02154E;
+        int foreground = (alpha << 24) | 0x58E7FF;
+        context.drawText(MinecraftClient.getInstance().textRenderer, text, 2, 1, shadow, false);
+        context.drawText(MinecraftClient.getInstance().textRenderer, text, 0, 0, foreground, false);
+        context.getMatrices().pop();
+    }
+
+    private static float easeInOutCubic(float value) {
+        return value < 0.5F
+                ? 4.0F * value * value * value
+                : 1.0F - (float) Math.pow(-2.0F * value + 2.0F, 3.0D) / 2.0F;
+    }
+
+    private static float easeOutExpo(float value) {
+        return value >= 1.0F ? 1.0F : 1.0F - (float) Math.pow(2.0D, -10.0F * value);
+    }
+
+    private static int withAlpha(int color, int alpha) {
+        return (alpha << 24) | (color & 0x00FFFFFF);
     }
 }

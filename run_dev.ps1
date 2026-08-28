@@ -1,7 +1,12 @@
 $ErrorActionPreference = "Stop"
 
-# Use the compatible JDK 21 found on the system
-$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot"
+$jdk21 = Get-ChildItem "C:\Program Files\Eclipse Adoptium" -Directory -Filter "jdk-21*" |
+    Sort-Object Name -Descending |
+    Select-Object -First 1
+if (-not $jdk21) {
+    throw "JDK 21 was not found under C:\Program Files\Eclipse Adoptium."
+}
+$env:JAVA_HOME = $jdk21.FullName
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 
 # Use the downloaded Gradle directly

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "p3rmenu",
+  "version": "${version}",
+  "name": "Persona 3 Reload Menu",
+  "description": "A Persona 3 Reload inspired main menu with selectable wallpapers.",
+  "authors": ["AmDev"],
+  "license": "CC0-1.0",
+  "icon": "assets/p3rmenu/icon.png",
+  "environment": "client",
+  "mixins": ["p3rmenu.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.19.4",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

@@ -1,1 +1,26 @@
 v1	named	intermediary
+FIELD	com/amnedev/p3rmenu/mixin/ChatHudMixin	Ljava/util/List;	visibleMessages	field_2064
+FIELD	com/amnedev/p3rmenu/mixin/ChatScreenMixin	Lnet/minecraft/client/gui/widget/TextFieldWidget;	chatField	field_2382
+FIELD	com/amnedev/p3rmenu/mixin/GameOptionsScreenMixin	Lnet/minecraft/client/gui/screen/Screen;	parent	field_21335
+FIELD	com/amnedev/p3rmenu/mixin/MultiplayerScreenMixin	Lnet/minecraft/client/gui/screen/Screen;	parent	field_3049
+FIELD	com/amnedev/p3rmenu/mixin/MultiplayerScreenMixin	Lnet/minecraft/client/gui/screen/multiplayer/MultiplayerServerListWidget;	serverListWidget	field_3043
+FIELD	com/amnedev/p3rmenu/mixin/MultiplayerScreenMixin	Ljava/util/List;	multiplayerScreenTooltip	field_3042
+FIELD	com/amnedev/p3rmenu/mixin/OptionsScreenMixin	Lnet/minecraft/client/gui/screen/Screen;	parent	field_2501
+FIELD	com/amnedev/p3rmenu/mixin/SelectWorldScreenMixin	Lnet/minecraft/client/gui/screen/Screen;	parent	field_3221
+FIELD	com/amnedev/p3rmenu/mixin/SelectWorldScreenMixin	Lnet/minecraft/client/gui/widget/TextFieldWidget;	searchBox	field_3220
+FIELD	com/amnedev/p3rmenu/mixin/SelectWorldScreenMixin	Lnet/minecraft/client/gui/screen/world/WorldListWidget;	levelList	field_3218
+FIELD	com/amnedev/p3rmenu/mixin/SliderWidgetMixin	D	value	field_22753
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	Lnet/minecraft/client/MinecraftClient;	client	field_18217
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	Lnet/minecraft/resource/ResourceReload;	reload	field_17767
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	Ljava/util/function/Consumer;	exceptionHandler	field_18218
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	Z	reloading	field_18219
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	F	progress	field_17770
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	J	reloadCompleteTime	field_17771
+FIELD	com/amnedev/p3rmenu/mixin/SplashOverlayMixin	J	reloadStartTime	field_18220
+METHOD	com/amnedev/p3rmenu/mixin/ChatHudMixin	()I	getWidth	method_1811
+METHOD	com/amnedev/p3rmenu/mixin/ChatHudMixin	()I	getVisibleLineCount	method_1813
+METHOD	com/amnedev/p3rmenu/mixin/ChatHudMixin	()D	getChatScale	method_1814
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	(I)Z	isSelectedEntry	method_25332
+METHOD	com/amnedev/p3rmenu/mixin/PressableWidgetMixin	()V	onPress	method_25306
+METHOD	com/amnedev/p3rmenu/mixin/SliderWidgetMixin	()V	updateMessage	method_25346
+METHOD	com/amnedev/p3rmenu/mixin/SliderWidgetMixin	()V	applyValue	method_25344

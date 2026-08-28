@@ -1,0 +1,23 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "p3rmenu:barlow_condensed_semibold.ttf",
+      "shift": [0.0, 0.5],
+      "size": 12.0,
+      "oversample": 3.0
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:include/space"
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:include/default"
+    },
+    {
+      "type": "reference",
+      "id": "minecraft:include/unifont"
+    }
+  ]
+}

@@ -8,6 +8,58 @@ import org.joml.Matrix4f;
 
 public class P3RHelper {
 
+    /** Draws one filled triangle in the current matrix space. */
+    public static void drawTriangle(DrawContext context,
+            float x0, float y0, float x1, float y1, float x2, float y2, int color) {
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        float a = (float) (color >> 24 & 255) / 255.0F;
+        float r = (float) (color >> 16 & 255) / 255.0F;
+        float g = (float) (color >> 8 & 255) / 255.0F;
+        float b = (float) (color & 255) / 255.0F;
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        builder.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_COLOR);
+        builder.vertex(matrix, x0, y0, 0).color(r, g, b, a).next();
+        builder.vertex(matrix, x1, y1, 0).color(r, g, b, a).next();
+        builder.vertex(matrix, x2, y2, 0).color(r, g, b, a).next();
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+        RenderSystem.disableBlend();
+    }
+
+    /**
+     * Fills a circle as a triangle fan. This mirrors the pause-menu mod's
+     * code-native polygon approach, so the geometry remains independent from
+     * the user's background texture.
+     */
+    public static void drawCircle(DrawContext context, float centerX, float centerY,
+            float radius, int segments, int color) {
+        Matrix4f matrix = context.getMatrices().peek().getPositionMatrix();
+        float a = (float) (color >> 24 & 255) / 255.0F;
+        float r = (float) (color >> 16 & 255) / 255.0F;
+        float g = (float) (color >> 8 & 255) / 255.0F;
+        float b = (float) (color & 255) / 255.0F;
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShader(GameRenderer::getPositionColorProgram);
+        BufferBuilder builder = Tessellator.getInstance().getBuffer();
+        builder.begin(VertexFormat.DrawMode.TRIANGLE_FAN, VertexFormats.POSITION_COLOR);
+        builder.vertex(matrix, centerX, centerY, 0).color(r, g, b, a).next();
+        int count = Math.max(12, segments);
+        for (int i = 0; i <= count; i++) {
+            double angle = Math.PI * 2.0D * i / count;
+            builder.vertex(matrix,
+                    centerX + (float) Math.cos(angle) * radius,
+                    centerY + (float) Math.sin(angle) * radius,
+                    0).color(r, g, b, a).next();
+        }
+        BufferRenderer.drawWithGlobalProgram(builder.end());
+        RenderSystem.disableBlend();
+    }
+
     /**
      * Draws a rectangle with a skewed right edge.
      * Useful for the menu item highlight strips.

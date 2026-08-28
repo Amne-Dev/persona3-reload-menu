@@ -1,0 +1,55 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    include implementation("org.sejda.imageio:webp-imageio:0.1.6")
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['../1.21.x/src/main/java']
+        resources.srcDirs = ['src/main/resources', '../../src/main/resources']
+    }
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    def version = project.version
+    inputs.property 'version', version
+    filesMatching('fabric.mod.json') {
+        expand 'version': version
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    from('../../LICENSE') {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}

@@ -15,3 +15,5 @@
 /versions/26.2/.gradle
 /versions/26.2/build
 /versions/26.2/run
+/.gradle
+/.gradle/8.8

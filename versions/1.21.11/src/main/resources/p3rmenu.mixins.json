@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "package": "com.amnedev.p3rmenu.v12111.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "LoadingOverlayMixin",
+    "TitleScreenMixin",
+    "SelectWorldScreenMixin",
+    "CreateWorldScreenMixin",
+    "OptionsScreenMixin",
+    "OptionsSubScreenMixin",
+    "AbstractButtonMixin",
+    "AbstractSliderButtonMixin",
+    "AbstractSelectionListMixin",
+    "OptionsListEntryMixin",
+    "JoinMultiplayerScreenMixin",
+    "ManageServerScreenMixin",
+    "EditBoxMixin",
+    "ChatScreenMixin",
+    "ChatComponentMixin",
+    "ScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

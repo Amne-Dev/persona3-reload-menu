@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "p3rmenu",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "name": "Persona 3 Reload Menu",
   "description": "A Persona 3 Reload inspired main menu mixin.",
   "authors": [
