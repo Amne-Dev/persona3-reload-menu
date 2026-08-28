@@ -3,3 +3,15 @@
 /build
 /gradle
 /run
+/build
+/build
+/.gradle
+/run
+/versions/1.21.11/.gradle
+/versions/1.21.11/build
+/versions/1.21.11/run
+/versions/1.21.8/.gradle
+/versions/1.21.8/build
+/versions/26.2/.gradle
+/versions/26.2/build
+/versions/26.2/run
