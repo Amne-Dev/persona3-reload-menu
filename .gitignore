@@ -17,3 +17,5 @@
 /versions/26.2/run
 /.gradle
 /.gradle/8.8
+/versions/1.21.8/run
+/run
