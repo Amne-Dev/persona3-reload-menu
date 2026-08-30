@@ -71,8 +71,9 @@ public abstract class PressableWidgetMixin extends ClickableWidget {
                 .setStyle(Style.EMPTY.withBold(true));
         int color = !this.active ? 0xFF7E8AA7
                 : selected ? 0xFFF8FAFF : 0xFFE6EEFF;
-        context.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, label,
-                x + this.getWidth() / 2, y + (this.getHeight() - 8) / 2, color);
+        P3RSettingsShell.drawFittedText(context, label,
+                x + 5, y + this.getHeight() / 2.0F,
+                Math.max(8, this.getWidth() - 10), color, true);
     }
 
     @Unique

@@ -43,7 +43,7 @@ public final class P3RMenuSettingsScreen extends Screen {
                 width, height, startedAt);
 
         float intro = P3RSettingsShell.entrance(startedAt);
-        for (int index = 0; index < 3; index++) {
+        for (int index = 0; index < DONE; index++) {
             int y = rowY(index);
             int left = Math.round(width * 0.075F);
             int right = Math.round(width * 0.70F);
@@ -65,6 +65,8 @@ public final class P3RMenuSettingsScreen extends Screen {
         P3RSettingsShell.drawFittedText(context, hint, width * 0.075F, height * 0.70F,
                 width * 0.60F, P3RSettingsShell.CYAN, false);
         P3RSettingsShell.renderDetailFooter(context, width, height, intro);
+        P3RSettingsShell.renderFooterAction(context, label(DONE), width, height,
+                intro, selected == DONE, true);
         TransitionManager.render(context, delta, width, height);
     }
 
@@ -169,12 +171,15 @@ public final class P3RMenuSettingsScreen extends Screen {
     }
 
     private int rowAt(double mouseX, double mouseY) {
+        if (P3RSettingsShell.footerActionContains(mouseX, mouseY, width, height)) {
+            return DONE;
+        }
         int left = Math.round(width * 0.06F);
         int right = Math.round(width * 0.72F);
         if (mouseX < left || mouseX > right) {
             return -1;
         }
-        for (int index = 0; index < 3; index++) {
+        for (int index = 0; index < DONE; index++) {
             if (mouseY >= rowY(index) - 3 && mouseY <= rowY(index) + rowHeight()) {
                 return index;
             }

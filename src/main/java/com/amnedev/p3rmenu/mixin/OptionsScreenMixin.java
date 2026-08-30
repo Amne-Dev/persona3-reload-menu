@@ -12,6 +12,7 @@ import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.PressableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
@@ -59,6 +60,8 @@ public abstract class OptionsScreenMixin extends Screen {
     private boolean p3r_draggingFov;
     @Unique
     private ClickableWidget p3r_fovWidget;
+    @Unique
+    private ClickableWidget p3r_doneWidget;
 
     protected OptionsScreenMixin(Text title) {
         super(title);
@@ -67,6 +70,7 @@ public abstract class OptionsScreenMixin extends Screen {
     @Inject(method = "init", at = @At("TAIL"))
     private void p3r_initSettings(CallbackInfo ci) {
         this.p3r_fovWidget = null;
+        this.p3r_doneWidget = null;
         for (Element child : this.children()) {
             if (child instanceof SliderWidget slider) {
                 this.p3r_fovWidget = slider;
@@ -135,24 +139,45 @@ public abstract class OptionsScreenMixin extends Screen {
         }
 
         Text selected = this.p3r_settingsItems.isEmpty() ? Text.empty()
-                : this.p3r_settingsLabels.get(this.p3r_settingsItems.get(this.p3r_selectedIndex));
+                : this.p3r_selectedIndex < this.p3r_settingsItems.size()
+                        ? this.p3r_settingsLabels.get(this.p3r_settingsItems.get(this.p3r_selectedIndex))
+                        : Text.empty();
+        int selectedRight = this.p3r_doneWidget == null ? this.width
+                : P3RSettingsShell.footerActionX(this.width, this.height)
+                        - Math.max(6, Math.round(8.0F
+                                * P3RSettingsShell.uiScale(this.width, this.height)));
         P3RSettingsShell.renderRootFooter(context, selected,
-                this.width, this.height, intro);
+                this.width, this.height, intro, selectedRight);
+        if (this.p3r_doneWidget != null) {
+            P3RSettingsShell.renderFooterAction(context,
+                    Text.literal(this.p3r_doneWidget.getMessage().getString().toUpperCase(Locale.ROOT))
+                            .setStyle(Style.EMPTY.withBold(true)),
+                    this.width, this.height, intro,
+                    this.p3r_selectedIndex == this.p3r_settingsItems.size(),
+                    this.p3r_doneWidget.active);
+        }
         TransitionManager.render(context, delta, this.width, this.height);
     }
 
     @Unique
     private void p3r_syncSettingsWidgets() {
         List<? extends Element> children = this.children();
-        this.p3r_settingsItems.removeIf(widget -> !children.contains(widget));
-        this.p3r_settingsLabels.keySet().removeIf(widget -> !children.contains(widget));
-        this.p3r_selectionProgress.keySet().removeIf(widget -> !children.contains(widget));
+        this.p3r_settingsItems.removeIf(widget -> !children.contains(widget) || p3r_isDone(widget));
+        this.p3r_settingsLabels.keySet().removeIf(widget -> !children.contains(widget) || p3r_isDone(widget));
+        this.p3r_selectionProgress.keySet().removeIf(widget -> !children.contains(widget) || p3r_isDone(widget));
 
         for (Element element : children) {
             if (!(element instanceof ClickableWidget widget)) {
                 continue;
             }
             widget.visible = false;
+            if (p3r_isDone(widget)) {
+                this.p3r_doneWidget = widget;
+                widget.setX(P3RSettingsShell.footerActionX(this.width, this.height));
+                widget.setY(P3RSettingsShell.footerActionY(this.width, this.height));
+                widget.setWidth(P3RSettingsShell.footerActionWidth(this.width, this.height));
+                continue;
+            }
             if (this.p3r_settingsLabels.containsKey(widget)) {
                 continue;
             }
@@ -166,7 +191,8 @@ public abstract class OptionsScreenMixin extends Screen {
             this.p3r_settingsItems.add(widget);
         }
         this.p3r_selectedIndex = MathHelper.clamp(this.p3r_selectedIndex, 0,
-                Math.max(0, this.p3r_settingsItems.size() - 1));
+                Math.max(0, this.p3r_settingsItems.size()
+                        - (this.p3r_doneWidget == null ? 1 : 0)));
     }
 
     @Unique
@@ -232,6 +258,13 @@ public abstract class OptionsScreenMixin extends Screen {
                 p3r_activate(entry.widget());
                 return true;
             }
+        }
+        if (this.p3r_doneWidget != null
+                && P3RSettingsShell.footerActionContains(mouseX, mouseY,
+                        this.width, this.height)) {
+            this.p3r_selectedIndex = this.p3r_settingsItems.size();
+            p3r_activate(this.p3r_doneWidget);
+            return true;
         }
         return false;
     }
@@ -302,7 +335,7 @@ public abstract class OptionsScreenMixin extends Screen {
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_A
                 || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_D) {
-            if (!this.p3r_settingsItems.isEmpty()
+            if (this.p3r_selectedIndex < this.p3r_settingsItems.size()
                     && p3r_isFov(this.p3r_settingsItems.get(this.p3r_selectedIndex))) {
                 p3r_adjustFov(keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_A
                         ? -1 : 1);
@@ -314,7 +347,9 @@ public abstract class OptionsScreenMixin extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_END) {
-            p3r_select(this.p3r_settingsItems.size() - 1, true);
+            p3r_select(this.p3r_doneWidget == null
+                    ? this.p3r_settingsItems.size() - 1
+                    : this.p3r_settingsItems.size(), true);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_TAB) {
@@ -323,7 +358,10 @@ public abstract class OptionsScreenMixin extends Screen {
         }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER
                 || keyCode == GLFW.GLFW_KEY_SPACE) {
-            if (!this.p3r_settingsItems.isEmpty()) {
+            if (this.p3r_doneWidget != null
+                    && this.p3r_selectedIndex == this.p3r_settingsItems.size()) {
+                p3r_activate(this.p3r_doneWidget);
+            } else if (!this.p3r_settingsItems.isEmpty()) {
                 p3r_activate(this.p3r_settingsItems.get(this.p3r_selectedIndex));
             }
             return true;
@@ -353,6 +391,12 @@ public abstract class OptionsScreenMixin extends Screen {
         if (!this.p3r_mouseNavigation || TransitionManager.isBlockingInput()) {
             return;
         }
+        if (this.p3r_doneWidget != null
+                && P3RSettingsShell.footerActionContains(mouseX, mouseY,
+                        this.width, this.height)) {
+            p3r_select(this.p3r_settingsItems.size(), true);
+            return;
+        }
         List<P3RSettingEntry> entries = p3r_layoutEntries();
         for (int i = 0; i < entries.size(); i++) {
             P3RSettingEntry entry = entries.get(i);
@@ -365,19 +409,21 @@ public abstract class OptionsScreenMixin extends Screen {
 
     @Unique
     private void p3r_moveSelection(int direction) {
-        if (this.p3r_settingsItems.isEmpty()) {
+        int count = this.p3r_settingsItems.size() + (this.p3r_doneWidget == null ? 0 : 1);
+        if (count == 0) {
             return;
         }
         p3r_select(Math.floorMod(this.p3r_selectedIndex + direction,
-                this.p3r_settingsItems.size()), true);
+                count), true);
     }
 
     @Unique
     private void p3r_select(int index, boolean sound) {
-        if (this.p3r_settingsItems.isEmpty()) {
+        int last = this.p3r_settingsItems.size() - (this.p3r_doneWidget == null ? 1 : 0);
+        if (last < 0) {
             return;
         }
-        int clamped = MathHelper.clamp(index, 0, this.p3r_settingsItems.size() - 1);
+        int clamped = MathHelper.clamp(index, 0, last);
         if (clamped == this.p3r_selectedIndex) {
             this.p3r_mouseNavigation = false;
             return;
@@ -385,9 +431,15 @@ public abstract class OptionsScreenMixin extends Screen {
         this.p3r_selectedIndex = clamped;
         this.p3r_mouseNavigation = false;
         if (sound) {
-            this.p3r_settingsItems.get(clamped)
-                    .playDownSound(this.client.getSoundManager());
+            ClickableWidget selected = clamped == this.p3r_settingsItems.size()
+                    ? this.p3r_doneWidget : this.p3r_settingsItems.get(clamped);
+            if (selected != null) selected.playDownSound(this.client.getSoundManager());
         }
+    }
+
+    @Unique
+    private boolean p3r_isDone(ClickableWidget widget) {
+        return widget.getMessage().equals(ScreenTexts.DONE);
     }
 
     @Unique

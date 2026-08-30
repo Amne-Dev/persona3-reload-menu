@@ -13,6 +13,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsScreen;
 import net.minecraft.client.Options;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.util.Mth;
 import net.minecraft.Util;
 import org.lwjgl.glfw.GLFW;
@@ -41,6 +42,7 @@ public abstract class OptionsScreenMixin extends Screen {
     @Unique private boolean p3r_mouseNavigation;
     @Unique private boolean p3r_draggingFov;
     @Unique private AbstractWidget p3r_fovWidget;
+    @Unique private AbstractWidget p3r_doneWidget;
 
     protected OptionsScreenMixin(Component title) {
         super(title);
@@ -49,6 +51,7 @@ public abstract class OptionsScreenMixin extends Screen {
     @Inject(method = "init", at = @At("TAIL"))
     private void p3r_init(CallbackInfo ci) {
         p3r_fovWidget = null;
+        p3r_doneWidget = null;
         for (GuiEventListener child : children()) {
             if (child instanceof AbstractSliderButton slider) {
                 p3r_fovWidget = slider;
@@ -105,17 +108,27 @@ public abstract class OptionsScreenMixin extends Screen {
             graphics.pose().popMatrix();
         }
 
-        Component current = p3r_items.isEmpty() ? Component.empty() : p3r_labels.get(p3r_items.get(p3r_selected));
-        P3RGraphics.configFooter(graphics, font, current, width, height, intro);
+        Component current = p3r_selected < p3r_items.size()
+                ? p3r_labels.get(p3r_items.get(p3r_selected)) : Component.empty();
+        int selectedRight = p3r_doneWidget == null ? width
+                : P3RGraphics.footerActionX(width, height)
+                        - Math.max(6, Math.round(8.0F * P3RGraphics.scale(width, height)));
+        P3RGraphics.configFooter(graphics, font, current, width, height, intro, selectedRight);
+        if (p3r_doneWidget != null) {
+            P3RGraphics.configFooterAction(graphics, font,
+                    P3RGraphics.bold(p3r_doneWidget.getMessage().getString()),
+                    width, height, intro, p3r_selected == p3r_items.size(),
+                    p3r_doneWidget.active);
+        }
         Transition.extract(graphics, width, height);
     }
 
     @Unique
     private void p3r_sync() {
         List<? extends GuiEventListener> children = children();
-        p3r_items.removeIf(button -> !children.contains(button));
-        p3r_labels.keySet().removeIf(button -> !children.contains(button));
-        p3r_selection.keySet().removeIf(button -> !children.contains(button));
+        p3r_items.removeIf(button -> !children.contains(button) || p3r_isDone(button));
+        p3r_labels.keySet().removeIf(button -> !children.contains(button) || p3r_isDone(button));
+        p3r_selection.keySet().removeIf(button -> !children.contains(button) || p3r_isDone(button));
         for (GuiEventListener child : children) {
             if (!(child instanceof AbstractWidget button)) {
                 continue;
@@ -123,13 +136,21 @@ public abstract class OptionsScreenMixin extends Screen {
             // render() replaces vanilla drawing, but the backing widgets remain
             // available for Minecraft's event/focus dispatcher as a fallback.
             button.visible = true;
+            if (p3r_isDone(button)) {
+                p3r_doneWidget = button;
+                button.setPosition(P3RGraphics.footerActionX(width, height),
+                        P3RGraphics.footerActionY(width, height));
+                button.setWidth(P3RGraphics.footerActionWidth(width, height));
+                continue;
+            }
             if (!p3r_labels.containsKey(button) && !button.getMessage().getString().isBlank()) {
                 p3r_labels.put(button, P3RGraphics.bold(button.getMessage().getString().strip()));
                 // Includes buttons added by other mods without needing a fixed registry.
                 p3r_items.add(button);
             }
         }
-        p3r_selected = Mth.clamp(p3r_selected, 0, Math.max(0, p3r_items.size() - 1));
+        p3r_selected = Mth.clamp(p3r_selected, 0,
+                Math.max(0, p3r_items.size() - (p3r_doneWidget == null ? 1 : 0)));
     }
 
     @Override
@@ -152,6 +173,12 @@ public abstract class OptionsScreenMixin extends Screen {
                 p3r_activate(entries.get(index).button());
                 return true;
             }
+        }
+        if (p3r_doneWidget != null
+                && P3RGraphics.footerActionContains(mouseX, mouseY, width, height)) {
+            p3r_selected = p3r_items.size();
+            p3r_activate(p3r_doneWidget);
+            return true;
         }
         return super.mouseClicked(mouseX, mouseY, buttonCode);
     }
@@ -210,7 +237,7 @@ public abstract class OptionsScreenMixin extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_A) {
-            if (!p3r_items.isEmpty() && p3r_isFov(p3r_items.get(p3r_selected))) {
+            if (p3r_selected < p3r_items.size() && p3r_isFov(p3r_items.get(p3r_selected))) {
                 p3r_adjustFov(-1);
             } else {
                 p3r_move(-1);
@@ -218,7 +245,7 @@ public abstract class OptionsScreenMixin extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_D) {
-            if (!p3r_items.isEmpty() && p3r_isFov(p3r_items.get(p3r_selected))) {
+            if (p3r_selected < p3r_items.size() && p3r_isFov(p3r_items.get(p3r_selected))) {
                 p3r_adjustFov(1);
             } else {
                 p3r_move(1);
@@ -227,7 +254,9 @@ public abstract class OptionsScreenMixin extends Screen {
         }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER
                 || keyCode == GLFW.GLFW_KEY_SPACE) {
-            if (!p3r_items.isEmpty()) {
+            if (p3r_doneWidget != null && p3r_selected == p3r_items.size()) {
+                p3r_activate(p3r_doneWidget);
+            } else if (!p3r_items.isEmpty()) {
                 p3r_activate(p3r_items.get(p3r_selected));
             }
             return true;
@@ -246,17 +275,20 @@ public abstract class OptionsScreenMixin extends Screen {
         }
         button.playDownSound(minecraft.getSoundManager());
         if (button instanceof AbstractButton pressable) {
-            Transition.startOut(p3r_labels.get(button), pressable::onPress);
+            Transition.startOut(p3r_labels.getOrDefault(button, button.getMessage()), pressable::onPress);
         }
     }
 
     @Unique
     private void p3r_move(int amount) {
-        if (p3r_items.isEmpty()) {
+        int count = p3r_items.size() + (p3r_doneWidget == null ? 0 : 1);
+        if (count == 0) {
             return;
         }
-        p3r_selected = Math.floorMod(p3r_selected + amount, p3r_items.size());
-        p3r_items.get(p3r_selected).playDownSound(minecraft.getSoundManager());
+        p3r_selected = Math.floorMod(p3r_selected + amount, count);
+        AbstractWidget selected = p3r_selected == p3r_items.size()
+                ? p3r_doneWidget : p3r_items.get(p3r_selected);
+        if (selected != null) selected.playDownSound(minecraft.getSoundManager());
         p3r_mouseNavigation = false;
     }
 
@@ -277,6 +309,14 @@ public abstract class OptionsScreenMixin extends Screen {
     @Unique
     private void p3r_updateMouse(int mouseX, int mouseY) {
         if (!p3r_mouseNavigation || Transition.blocksScreenInput()) {
+            return;
+        }
+        if (p3r_doneWidget != null
+                && P3RGraphics.footerActionContains(mouseX, mouseY, width, height)) {
+            if (p3r_selected != p3r_items.size()) {
+                p3r_selected = p3r_items.size();
+                p3r_doneWidget.playDownSound(minecraft.getSoundManager());
+            }
             return;
         }
         List<Entry> entries = p3r_entries();
@@ -344,6 +384,11 @@ public abstract class OptionsScreenMixin extends Screen {
     @Unique
     private boolean p3r_isFov(AbstractWidget button) {
         return button == p3r_fovWidget;
+    }
+
+    @Unique
+    private boolean p3r_isDone(AbstractWidget button) {
+        return button.getMessage().equals(CommonComponents.GUI_DONE);
     }
 
     @Unique

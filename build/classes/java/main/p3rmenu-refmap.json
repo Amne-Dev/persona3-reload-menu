@@ -18,9 +18,11 @@
     },
     "com/amnedev/p3rmenu/mixin/EntryListWidgetMixin": {
       "drawSelectionHighlight": "Lnet/minecraft/class_350;method_44398(Lnet/minecraft/class_332;IIIII)V",
+      "getEntryAtPosition": "Lnet/minecraft/class_350;method_25308(DD)Lnet/minecraft/class_350$class_351;",
       "getRowLeft": "Lnet/minecraft/class_350;method_25342()I",
       "getRowWidth": "Lnet/minecraft/class_350;method_25322()I",
       "getScrollbarPositionX": "Lnet/minecraft/class_350;method_25329()I",
+      "render": "Lnet/minecraft/class_350;method_25394(Lnet/minecraft/class_332;IIF)V",
       "renderEntry": "Lnet/minecraft/class_350;method_44397(Lnet/minecraft/class_332;IIFIIIII)V"
     },
     "com/amnedev/p3rmenu/mixin/GameOptionsScreenMixin": {
@@ -119,9 +121,11 @@
       },
       "com/amnedev/p3rmenu/mixin/EntryListWidgetMixin": {
         "drawSelectionHighlight": "Lnet/minecraft/class_350;method_44398(Lnet/minecraft/class_332;IIIII)V",
+        "getEntryAtPosition": "Lnet/minecraft/class_350;method_25308(DD)Lnet/minecraft/class_350$class_351;",
         "getRowLeft": "Lnet/minecraft/class_350;method_25342()I",
         "getRowWidth": "Lnet/minecraft/class_350;method_25322()I",
         "getScrollbarPositionX": "Lnet/minecraft/class_350;method_25329()I",
+        "render": "Lnet/minecraft/class_350;method_25394(Lnet/minecraft/class_332;IIF)V",
         "renderEntry": "Lnet/minecraft/class_350;method_44397(Lnet/minecraft/class_332;IIFIIIII)V"
       },
       "com/amnedev/p3rmenu/mixin/GameOptionsScreenMixin": {

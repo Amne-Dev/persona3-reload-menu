@@ -120,16 +120,8 @@ public abstract class AbstractSelectionListMixin {
     @Inject(method = "scrollBarX", at = @At("RETURN"), cancellable = true)
     private void p3r_scrollbar(CallbackInfoReturnable<Integer> cir) {
         Screen screen = Minecraft.getInstance().gui.screen();
-        if ((Object) this instanceof OptionsList && screen != null
-                && P3RScreenFamily.isConfiguration(screen)) {
-            cir.setReturnValue(Math.round(screen.width * 0.70F) + 6);
-        } else if ((Object) this instanceof ServerSelectionList
-                || (Object) this instanceof WorldSelectionList) {
-            int width = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-            int rowWidth = (Object) this instanceof WorldSelectionList
-                    ? Math.max(220, Math.min(620, Math.round(width * 0.54F)))
-                    : Math.max(260, Math.min(640, Math.round(width * 0.54F)));
-            cir.setReturnValue(Math.round(width * 0.385F) + rowWidth + 6);
+        if (screen != null && P3RScreenFamily.isStyled(screen)) {
+            cir.setReturnValue(Math.max(6, Math.round(screen.width * 0.035F)));
         }
     }
 }

@@ -129,6 +129,12 @@ public final class P3RGraphics {
 
     public static void configFooter(GuiGraphics graphics, Font font,
             Component selected, int width, int height, float intro) {
+        configFooter(graphics, font, selected, width, height, intro,
+                width - Math.max(12, Math.round(18.0F * scale(width, height))));
+    }
+
+    public static void configFooter(GuiGraphics graphics, Font font,
+            Component selected, int width, int height, float intro, int selectedRight) {
         float ui = scale(width, height);
         int footerTop = Math.round(height * 0.815F);
         graphics.pose().pushMatrix();
@@ -143,10 +149,49 @@ public final class P3RGraphics {
         graphics.drawString(font, controls, right - font.width(controls), controlsY,
                 alpha(0xFF3D5875, Math.min(0.88F, intro)), true);
         if (selected != null && !selected.getString().isBlank()) {
-            graphics.drawString(font, selected, right - font.width(selected),
+            graphics.drawString(font, selected, selectedRight - font.width(selected),
                     footerTop + Math.max(10, Math.round(12.0F * ui)),
                     alpha(0xFF222A3E, intro), true);
         }
+    }
+
+    public static int footerActionWidth(int width, int height) {
+        return Math.max(90, Math.min(132, Math.round(width * 0.60F)));
+    }
+
+    public static int footerActionX(int width, int height) {
+        return width - Math.max(14, Math.round(20.0F * scale(width, height)))
+                - footerActionWidth(width, height);
+    }
+
+    public static int footerActionY(int width, int height) {
+        return Math.round(height * 0.84F);
+    }
+
+    public static boolean footerActionContains(double mouseX, double mouseY,
+            int width, int height) {
+        int x = footerActionX(width, height);
+        int y = footerActionY(width, height);
+        return mouseX >= x && mouseX <= x + footerActionWidth(width, height)
+                && mouseY >= y && mouseY <= y + 20;
+    }
+
+    public static void configFooterAction(GuiGraphics graphics, Font font,
+            Component label, int width, int height, float intro,
+            boolean selected, boolean active) {
+        int x = footerActionX(width, height);
+        int y = footerActionY(width, height);
+        int right = x + footerActionWidth(width, height);
+        int bottom = y + 20;
+        graphics.fill(x, y, right, bottom,
+                alpha(active ? 0xE10B1022 : 0xA03B4150, intro));
+        if (selected) {
+            graphics.fill(x, y, right, y + 2, alpha(RED, intro));
+            graphics.fill(x, bottom - 2, right, bottom, alpha(PINK, intro));
+        }
+        int color = !active ? 0xFF7E8799 : selected ? CONFIG_WHITE : CYAN;
+        fittedText(graphics, font, label, x + 7, y + 10,
+                Math.max(8, right - x - 14), 1.0F, alpha(color, intro), true);
     }
 
     public static void configSelection(GuiGraphics graphics, int x, int y,

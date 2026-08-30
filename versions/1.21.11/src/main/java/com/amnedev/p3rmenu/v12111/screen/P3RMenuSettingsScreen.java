@@ -13,6 +13,7 @@ import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
 public final class P3RMenuSettingsScreen extends Screen {
+    private static final int DONE = 2;
     private final Screen parent;
     private final float[] selection = {1.0F, 0.0F, 0.0F};
     private int selected;
@@ -42,25 +43,27 @@ public final class P3RMenuSettingsScreen extends Screen {
         P3RGraphics.configHeader(graphics, font, "P3R MENU SETTINGS",
                 width, height, intro);
 
-        for (int index = 0; index < 3; index++) {
+        for (int index = 0; index < DONE; index++) {
             int y = rowY(index);
             int left = Math.round(width * 0.075F);
-            int right = Math.round(width * 0.72F);
-            int rowHeight = Math.max(23, Math.round(29.0F * P3RGraphics.scale(width, height)));
+            int right = Math.round(width * 0.70F);
+            int rowHeight = rowHeight();
             if (selection[index] > 0.01F) {
-                P3RGraphics.skewedRect(graphics, left - 32, y, right - left + 46,
-                        rowHeight, 23, P3RGraphics.alpha(P3RGraphics.WHITE,
-                                selection[index] * intro));
-                P3RGraphics.skewedRect(graphics, left - 45, y + 2, 17,
-                        rowHeight - 4, 7, P3RGraphics.alpha(P3RGraphics.PINK,
-                                selection[index] * intro));
+                P3RGraphics.configSelection(graphics, left, y, right,
+                        rowHeight, selection[index] * intro);
             }
             P3RGraphics.fittedText(graphics, font, label(index), left + 8,
                     y + rowHeight * 0.52F, right - left - 16,
                     1.38F * P3RGraphics.scale(width, height),
                     index == selected ? P3RGraphics.INK : P3RGraphics.CYAN, false);
         }
-        P3RGraphics.configFooter(graphics, font, label(selected), width, height, intro);
+        P3RGraphics.fittedText(graphics, font,
+                P3RGraphics.bold("CUSTOM CHAT CHANGES THE IN-GAME CHAT PANEL AND ITS OPENING MOTION"),
+                width * 0.075F, height * 0.70F, width * 0.60F,
+                P3RGraphics.scale(width, height), P3RGraphics.CYAN, false);
+        P3RGraphics.configFooter(graphics, font, null, width, height, intro);
+        P3RGraphics.configFooterAction(graphics, font, label(DONE), width, height,
+                intro, selected == DONE, true);
         Transition.extract(graphics, width, height);
     }
 
@@ -136,17 +139,21 @@ public final class P3RMenuSettingsScreen extends Screen {
     }
 
     private int rowY(int index) {
-        int step = Math.max(31, Math.round(38.0F * P3RGraphics.scale(width, height)));
+        int step = Math.max(29, Math.round(36.0F * P3RGraphics.scale(width, height)));
         return Math.round(height * 0.30F) + index * step;
     }
 
     private int rowAt(double x, double y) {
-        if (x < width * 0.055F || x > width * 0.74F) return -1;
-        int height = Math.max(25, Math.round(31.0F * P3RGraphics.scale(width, this.height)));
-        for (int index = 0; index < 3; index++) {
-            if (y >= rowY(index) - 3 && y <= rowY(index) + height) return index;
+        if (P3RGraphics.footerActionContains(x, y, width, height)) return DONE;
+        if (x < width * 0.06F || x > width * 0.72F) return -1;
+        for (int index = 0; index < DONE; index++) {
+            if (y >= rowY(index) - 3 && y <= rowY(index) + rowHeight()) return index;
         }
         return -1;
+    }
+
+    private int rowHeight() {
+        return Math.max(22, Math.round(26.0F * P3RGraphics.scale(width, height)));
     }
 
     private void update() {

@@ -48,11 +48,15 @@ public abstract class MultiplayerScreenMixin extends Screen {
     @Unique
     private void p3r_layoutServerSelection() {
         float uiScale = P3RScreenShell.uiScale(this.width, this.height);
+        int actionsTop = P3RScreenShell.layoutButtons(this);
+        int defaultBottom = this.height - Math.max(P3RScreenShell.SPACE_HERO,
+                Math.round(68.0F * uiScale));
+        int contentBottom = Math.min(defaultBottom,
+                actionsTop - Math.max(P3RScreenShell.SPACE_TIGHT,
+                        Math.round(10.0F * uiScale)));
         this.serverListWidget.updateSize(this.width, this.height,
                 Math.max(P3RScreenShell.SPACE_MAJOR, Math.round(52.0F * uiScale)),
-                this.height - Math.max(P3RScreenShell.SPACE_HERO,
-                        Math.round(68.0F * uiScale)));
-        P3RScreenShell.layoutButtons(this);
+                Math.max(P3RScreenShell.SPACE_MAJOR + 1, contentBottom));
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)

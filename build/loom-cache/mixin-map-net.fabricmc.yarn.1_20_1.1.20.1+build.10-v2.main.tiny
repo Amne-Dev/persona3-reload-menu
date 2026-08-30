@@ -1,6 +1,10 @@
 v1	named	intermediary
 FIELD	com/amnedev/p3rmenu/mixin/ChatHudMixin	Ljava/util/List;	visibleMessages	field_2064
 FIELD	com/amnedev/p3rmenu/mixin/ChatScreenMixin	Lnet/minecraft/client/gui/widget/TextFieldWidget;	chatField	field_2382
+FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	top	field_19085
+FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	bottom	field_19086
+FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	itemHeight	field_22741
+FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	headerHeight	field_22748
 FIELD	com/amnedev/p3rmenu/mixin/GameOptionsScreenMixin	Lnet/minecraft/client/gui/screen/Screen;	parent	field_21335
 FIELD	com/amnedev/p3rmenu/mixin/MultiplayerScreenMixin	Lnet/minecraft/client/gui/screen/Screen;	parent	field_3049
 FIELD	com/amnedev/p3rmenu/mixin/MultiplayerScreenMixin	Lnet/minecraft/client/gui/screen/multiplayer/MultiplayerServerListWidget;	serverListWidget	field_3043
@@ -21,6 +25,13 @@ METHOD	com/amnedev/p3rmenu/mixin/ChatHudMixin	()I	getWidth	method_1811
 METHOD	com/amnedev/p3rmenu/mixin/ChatHudMixin	()I	getVisibleLineCount	method_1813
 METHOD	com/amnedev/p3rmenu/mixin/ChatHudMixin	()D	getChatScale	method_1814
 METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	(I)Z	isSelectedEntry	method_25332
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()I	getEntryCount	method_25340
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()I	getRowLeft	method_25342
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()I	getRowRight	method_31383
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()I	getMaxPosition	method_25317
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()I	getScrollbarPositionX	method_25329
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()I	getMaxScroll	method_25331
+METHOD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	()D	getScrollAmount	method_25341
 METHOD	com/amnedev/p3rmenu/mixin/PressableWidgetMixin	()V	onPress	method_25306
 METHOD	com/amnedev/p3rmenu/mixin/SliderWidgetMixin	()V	updateMessage	method_25346
 METHOD	com/amnedev/p3rmenu/mixin/SliderWidgetMixin	()V	applyValue	method_25344

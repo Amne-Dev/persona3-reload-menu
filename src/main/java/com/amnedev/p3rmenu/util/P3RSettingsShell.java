@@ -127,6 +127,12 @@ public final class P3RSettingsShell {
 
     public static void renderRootFooter(DrawContext context, Text selected,
             int width, int height, float intro) {
+        renderRootFooter(context, selected, width, height, intro,
+                width - Math.max(12, Math.round(18.0F * uiScale(width, height))));
+    }
+
+    public static void renderRootFooter(DrawContext context, Text selected,
+            int width, int height, float intro, int selectedRight) {
         MinecraftClient client = MinecraftClient.getInstance();
         float uiScale = uiScale(width, height);
         String value = selected == null ? "" : selected.getString();
@@ -139,13 +145,57 @@ public final class P3RSettingsShell {
 
         int right = width - Math.max(12, Math.round(18.0F * uiScale));
         int y = footerTop + Math.max(10, Math.round(12.0F * uiScale));
-        context.drawTextWithShadow(client.textRenderer, prompt,
-                right - client.textRenderer.getWidth(prompt), y,
+        int laneRight = Math.min(right, selectedRight);
+        int laneLeft = Math.min(laneRight - 8, Math.max(
+                Math.round(width * 0.38F),
+                Math.round(150.0F * uiScale)));
+        int laneWidth = Math.max(8, laneRight - laneLeft);
+        drawRightFittedText(context, prompt, laneRight, y, laneWidth,
                 (alpha << 24) | 0x222A3E);
-        context.drawTextWithShadow(client.textRenderer, controls,
-                right - client.textRenderer.getWidth(controls),
-                y + Math.max(10, Math.round(11.0F * uiScale)),
+        drawRightFittedText(context, controls, laneRight,
+                y + Math.max(10, Math.round(11.0F * uiScale)), laneWidth,
                 (Math.min(225, alpha) << 24) | 0x3D5875);
+    }
+
+    public static int footerActionWidth(int width, int height) {
+        return MathHelper.clamp(Math.round(width * 0.20F), 78, 132);
+    }
+
+    public static int footerActionX(int width, int height) {
+        return width - Math.max(14, Math.round(20.0F * uiScale(width, height)))
+                - footerActionWidth(width, height);
+    }
+
+    public static int footerActionY(int width, int height) {
+        return Math.round(height * 0.84F);
+    }
+
+    public static boolean footerActionContains(double mouseX, double mouseY,
+            int width, int height) {
+        int x = footerActionX(width, height);
+        int y = footerActionY(width, height);
+        return mouseX >= x && mouseX <= x + footerActionWidth(width, height)
+                && mouseY >= y && mouseY <= y + 20;
+    }
+
+    public static void renderFooterAction(DrawContext context, Text label,
+            int width, int height, float intro, boolean selected, boolean active) {
+        int x = footerActionX(width, height);
+        int y = footerActionY(width, height);
+        int right = x + footerActionWidth(width, height);
+        int bottom = y + 20;
+        context.fill(x, y, right, bottom, withAlpha(
+                active ? 0xE10B1022 : 0xA03B4150, Math.round(255.0F * intro)));
+        if (selected) {
+            context.fill(x, y, right, y + 2,
+                    withAlpha(RED, Math.round(255.0F * intro)));
+            context.fill(x, bottom - 2, right, bottom,
+                    withAlpha(PINK, Math.round(255.0F * intro)));
+        }
+        int color = !active ? 0xFF7E8799 : selected ? WHITE : CYAN;
+        drawFittedText(context, label, x + 7, y + 10,
+                Math.max(8, right - x - 14),
+                withAlpha(color, Math.round(255.0F * intro)), true);
     }
 
     public static void renderDetailFooter(DrawContext context,
@@ -158,10 +208,13 @@ public final class P3RSettingsShell {
 
         Text controls = Text.literal("ENTER  SELECT     ESC  BACK")
                 .setStyle(Style.EMPTY.withBold(true));
-        int right = width - Math.max(12, Math.round(18.0F * uiScale));
+        int right = footerActionX(width, height)
+                - Math.max(6, Math.round(8.0F * uiScale));
+        int left = Math.min(right - 8, Math.max(
+                Math.round(width * 0.38F), Math.round(150.0F * uiScale)));
         int y = height - Math.max(12, Math.round(17.0F * uiScale));
-        context.drawTextWithShadow(client.textRenderer, controls,
-                right - client.textRenderer.getWidth(controls), y,
+        drawRightFittedText(context, controls, right, y,
+                Math.max(8, right - left),
                 (Math.min(225, alpha) << 24) | 0x3D5875);
     }
 
@@ -186,6 +239,19 @@ public final class P3RSettingsShell {
         float x = centered ? left + Math.max(0.0F, (maxWidth - drawnWidth) * 0.5F) : left;
         context.getMatrices().push();
         context.getMatrices().translate(x, centerY - 4.0F * scale, 80.0F);
+        context.getMatrices().scale(scale, scale, 1.0F);
+        context.drawText(client.textRenderer, text, 0, 0, color, true);
+        context.getMatrices().pop();
+    }
+
+    private static void drawRightFittedText(DrawContext context, Text text,
+            float right, float top, float maxWidth, int color) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        int textWidth = Math.max(1, client.textRenderer.getWidth(text));
+        float scale = MathHelper.clamp(maxWidth / textWidth, 0.48F, 1.0F);
+        context.getMatrices().push();
+        context.getMatrices().translate(right - textWidth * scale,
+                top + (1.0F - scale) * 4.0F, 80.0F);
         context.getMatrices().scale(scale, scale, 1.0F);
         context.drawText(client.textRenderer, text, 0, 0, color, true);
         context.getMatrices().pop();

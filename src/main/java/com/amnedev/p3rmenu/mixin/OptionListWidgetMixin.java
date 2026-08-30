@@ -23,7 +23,7 @@ public abstract class OptionListWidgetMixin {
     private void p3r_alignSettingsScrollbar(CallbackInfoReturnable<Integer> cir) {
         Screen screen = MinecraftClient.getInstance().currentScreen;
         if (screen != null && P3RSettingsShell.isSettingsDetail(screen)) {
-            cir.setReturnValue(Math.round(screen.width * 0.655F));
+            cir.setReturnValue(Math.max(6, Math.round(screen.width * 0.035F)));
         }
     }
 }

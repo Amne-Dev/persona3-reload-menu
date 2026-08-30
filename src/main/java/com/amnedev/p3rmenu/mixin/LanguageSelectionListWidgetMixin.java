@@ -25,6 +25,6 @@ public abstract class LanguageSelectionListWidgetMixin {
     @Inject(method = "getScrollbarPositionX", at = @At("RETURN"), cancellable = true)
     private void p3r_languageScrollbar(CallbackInfoReturnable<Integer> cir) {
         int width = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        cir.setReturnValue(Math.round(width * 0.655F));
+        cir.setReturnValue(Math.max(6, Math.round(width * 0.035F)));
     }
 }

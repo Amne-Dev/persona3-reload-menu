@@ -19,7 +19,6 @@ public class WorldListWidgetMixin {
     @Inject(method = "getScrollbarPositionX", at = @At("RETURN"), cancellable = true)
     private void p3r_moveWorldScrollbar(CallbackInfoReturnable<Integer> cir) {
         int screenWidth = MinecraftClient.getInstance().getWindow().getScaledWidth();
-        int rowWidth = MathHelper.clamp(Math.round(screenWidth * 0.54F), 220, 620);
-        cir.setReturnValue(Math.round(screenWidth * 0.385F) + rowWidth + 6);
+        cir.setReturnValue(Math.max(6, Math.round(screenWidth * 0.035F)));
     }
 }

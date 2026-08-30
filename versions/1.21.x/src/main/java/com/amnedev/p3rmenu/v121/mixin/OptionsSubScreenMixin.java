@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,16 +32,30 @@ public abstract class OptionsSubScreenMixin extends Screen {
         for (GuiEventListener child : children()) {
             if (child instanceof StringWidget heading) heading.visible = false;
         }
-        p3r_layoutOptions();
     }
 
-    private void p3r_layoutOptions() {
+    @Inject(method = "repositionElements", at = @At("TAIL"))
+    private void p3r_layoutOptions(CallbackInfo ci) {
         if (list != null) {
             int top = Math.max(42, Math.round(height * 0.105F));
             int bottom = Math.round(height * 0.80F);
             list.updateSizeAndPosition(width, Math.max(1, bottom - top), top);
         }
         P3RGraphics.layoutFooterButtons(this);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int buttonCode) {
+        // Dispatch from the same geometry used to draw the detached footer
+        // action. This prevents layout-owned widgets from swallowing Done.
+        if (buttonCode == GLFW.GLFW_MOUSE_BUTTON_LEFT
+                && P3RGraphics.footerActionContains(mouseX, mouseY, width, height)) {
+            if (!Transition.blocksScreenInput()) {
+                onClose();
+            }
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, buttonCode);
     }
 
     @Inject(method = "onClose", at = @At("HEAD"), cancellable = true)

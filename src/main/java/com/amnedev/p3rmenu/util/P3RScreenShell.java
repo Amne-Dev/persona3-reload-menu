@@ -157,7 +157,8 @@ public final class P3RScreenShell {
                 markerY + Math.max(2, Math.round(3.0F * uiScale)), COBALT);
     }
 
-    public static void layoutButtons(Screen screen) {
+    /** Lays out list actions responsively and returns the top of their reserved area. */
+    public static int layoutButtons(Screen screen) {
         List<ButtonWidget> buttons = new ArrayList<>();
         for (Element element : screen.children()) {
             if (element instanceof ButtonWidget button && button.visible) {
@@ -165,19 +166,26 @@ public final class P3RScreenShell {
             }
         }
         if (buttons.isEmpty()) {
-            return;
+            return screen.height;
         }
 
         float uiScale = uiScale(screen.width, screen.height);
         int regionLeft = Math.round(screen.width * 0.375F);
         int regionRight = screen.width - Math.max(SPACE_CONTROL, Math.round(20.0F * uiScale));
-        int columns = buttons.size() <= 4 ? buttons.size() : Math.min(4, (buttons.size() + 1) / 2);
-        int rows = (int) Math.ceil(buttons.size() / (double) columns);
         int gap = Math.max(SPACE_MICRO, Math.round(SPACE_TIGHT * uiScale));
-        int buttonWidth = Math.max(64, (regionRight - regionLeft - gap * (columns - 1)) / columns);
-        int rowStep = Math.max(20, Math.round(SPACE_GROUP * uiScale));
-        int firstY = screen.height - Math.max(SPACE_MAJOR,
-                Math.round((rows == 1 ? 38.0F : 58.0F) * uiScale));
+        int availableWidth = Math.max(1, regionRight - regionLeft);
+        int preferredColumns = buttons.size() <= 4
+                ? buttons.size() : Math.min(4, (buttons.size() + 1) / 2);
+        int maxColumns = Math.max(1, (availableWidth + gap) / (56 + gap));
+        int columns = Math.max(1, Math.min(preferredColumns, maxColumns));
+        int rows = (int) Math.ceil(buttons.size() / (double) columns);
+        int buttonWidth = Math.max(44,
+                (availableWidth - gap * (columns - 1)) / columns);
+        int rowGap = Math.max(2, Math.round(SPACE_MICRO * uiScale));
+        int rowStep = 20 + rowGap;
+        int bottomMargin = Math.max(SPACE_TIGHT, Math.round(10.0F * uiScale));
+        int totalHeight = rows * 20 + (rows - 1) * rowGap;
+        int firstY = Math.max(0, screen.height - bottomMargin - totalHeight);
 
         for (int i = 0; i < buttons.size(); i++) {
             ButtonWidget button = buttons.get(i);
@@ -191,6 +199,7 @@ public final class P3RScreenShell {
             button.setY(firstY + row * rowStep);
             button.setWidth(buttonWidth);
         }
+        return firstY;
     }
 
     public static boolean isPersonaListScreen(Screen screen) {

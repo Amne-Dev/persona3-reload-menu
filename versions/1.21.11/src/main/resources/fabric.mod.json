@@ -10,7 +10,7 @@
   "environment": "client",
   "mixins": ["p3rmenu.mixins.json"],
   "depends": {
-    "fabricloader": ">=0.19.4",
+    "fabricloader": ">=0.17.3",
     "minecraft": "~1.21.11",
     "java": ">=21",
     "fabric-api": "*"
