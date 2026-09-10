@@ -74,11 +74,14 @@ public final class Transition {
         if (phase == Phase.OUT && raw >= 1.0F && action != null) {
             Runnable queued = action;
             action = null;
-            runWithoutInterception(queued);
-            if (Minecraft.getInstance().gui.screen() == null) {
-                clear();
-            } else if (phase == Phase.OUT) {
-                startIn();
+            try {
+                runWithoutInterception(queued);
+            } finally {
+                if (Minecraft.getInstance().gui.screen() == null) {
+                    clear();
+                } else if (phase == Phase.OUT) {
+                    startIn();
+                }
             }
             return;
         }

@@ -84,7 +84,8 @@ public abstract class PressableWidgetMixin extends ClickableWidget {
         int right = x + this.getWidth();
         int bottom = y + this.getHeight();
         context.fill(x, y, right, bottom,
-                !this.active ? 0x544B536B : selected ? P3RSettingsShell.WHITE : 0x24556A93);
+                !this.active ? 0x544B536B
+                        : selected ? P3RSettingsShell.configSelectionSurface() : 0x24556A93);
         if (selected) {
             context.fill(x, y, right, y + 2, P3RSettingsShell.RED);
             context.fill(x, y, x + 2, bottom, P3RSettingsShell.PINK);
@@ -93,7 +94,7 @@ public abstract class PressableWidgetMixin extends ClickableWidget {
         String message = this.getMessage().getString();
         int separator = message.indexOf(':');
         int labelColor = !this.active ? 0xFF7E8799
-                : selected ? P3RSettingsShell.INK : P3RSettingsShell.CYAN;
+                : selected ? P3RSettingsShell.configSelectedText() : P3RSettingsShell.CYAN;
         if (separator > 0 && separator < message.length() - 1) {
             Text label = Text.literal(message.substring(0, separator).strip()
                     .toUpperCase(Locale.ROOT)).setStyle(Style.EMPTY.withBold(true));

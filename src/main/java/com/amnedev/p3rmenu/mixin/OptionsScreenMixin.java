@@ -124,15 +124,17 @@ public abstract class OptionsScreenMixin extends Screen {
             }
             float selectedScale = 1.0F + 0.04F * P3RSettingsShell.sharpOut(selection);
             int color = selection > 0.08F
-                    ? P3RSettingsShell.INK : P3RSettingsShell.CYAN;
+                    ? P3RSettingsShell.configSelectedText() : P3RSettingsShell.CYAN;
             int alpha = MathHelper.clamp(Math.round(255.0F * intro), 0, 255);
 
             context.getMatrices().push();
             context.getMatrices().translate(entry.x(), entry.y(), 80.0F);
             context.getMatrices().scale(entry.textScale() * selectedScale,
                     entry.textScale() * selectedScale, 1.0F);
-            int shadow = (Math.min(110, alpha) << 24) | 0x263556;
-            context.drawText(this.textRenderer, entry.label(), 1, 1, shadow, false);
+            if (selection <= 0.08F) {
+                int shadow = (Math.min(110, alpha) << 24) | 0x263556;
+                context.drawText(this.textRenderer, entry.label(), 1, 1, shadow, false);
+            }
             context.drawText(this.textRenderer, entry.label(), 0, 0,
                     (alpha << 24) | (color & 0x00FFFFFF), false);
             context.getMatrices().pop();
@@ -162,15 +164,21 @@ public abstract class OptionsScreenMixin extends Screen {
     @Unique
     private void p3r_syncSettingsWidgets() {
         List<? extends Element> children = this.children();
-        this.p3r_settingsItems.removeIf(widget -> !children.contains(widget) || p3r_isDone(widget));
-        this.p3r_settingsLabels.keySet().removeIf(widget -> !children.contains(widget) || p3r_isDone(widget));
-        this.p3r_selectionProgress.keySet().removeIf(widget -> !children.contains(widget) || p3r_isDone(widget));
+        this.p3r_settingsItems.removeIf(widget -> !children.contains(widget)
+                || p3r_isDone(widget) || p3r_isEssentialSettings(widget));
+        this.p3r_settingsLabels.keySet().removeIf(widget -> !children.contains(widget)
+                || p3r_isDone(widget) || p3r_isEssentialSettings(widget));
+        this.p3r_selectionProgress.keySet().removeIf(widget -> !children.contains(widget)
+                || p3r_isDone(widget) || p3r_isEssentialSettings(widget));
 
         for (Element element : children) {
             if (!(element instanceof ClickableWidget widget)) {
                 continue;
             }
             widget.visible = false;
+            if (p3r_isEssentialSettings(widget)) {
+                continue;
+            }
             if (p3r_isDone(widget)) {
                 this.p3r_doneWidget = widget;
                 widget.setX(P3RSettingsShell.footerActionX(this.width, this.height));
@@ -443,6 +451,19 @@ public abstract class OptionsScreenMixin extends Screen {
     }
 
     @Unique
+    private static boolean p3r_isEssentialSettings(ClickableWidget widget) {
+        if (!widget.getClass().getName().startsWith("gg.essential.")) {
+            return false;
+        }
+        try {
+            Object id = widget.getClass().getMethod("getEssentialId").invoke(widget);
+            return "settings".equals(id);
+        } catch (ReflectiveOperationException ignored) {
+            return false;
+        }
+    }
+
+    @Unique
     private void p3r_activate(ClickableWidget widget) {
         if (!widget.active || TransitionManager.isTransitioning()) {
             return;
@@ -476,7 +497,8 @@ public abstract class OptionsScreenMixin extends Screen {
             float selection, float intro) {
         float selectedScale = 1.0F + 0.04F * P3RSettingsShell.sharpOut(selection);
         int alpha = MathHelper.clamp(Math.round(255.0F * intro), 0, 255);
-        int color = selection > 0.08F ? P3RSettingsShell.INK : P3RSettingsShell.CYAN;
+        int color = selection > 0.08F
+                ? P3RSettingsShell.configSelectedText() : P3RSettingsShell.CYAN;
         Text label = Text.literal("FOV").setStyle(Style.EMPTY.withBold(true));
         Text value = Text.literal(Integer.toString(this.client.options.getFov().getValue()))
                 .setStyle(Style.EMPTY.withBold(true));
@@ -486,7 +508,7 @@ public abstract class OptionsScreenMixin extends Screen {
         context.getMatrices().scale(entry.textScale() * selectedScale,
                 entry.textScale() * selectedScale, 1.0F);
         context.drawText(this.textRenderer, label, 0, 0,
-                (alpha << 24) | (color & 0x00FFFFFF), true);
+                (alpha << 24) | (color & 0x00FFFFFF), selection <= 0.08F);
         context.getMatrices().pop();
 
         int trackLeft = Math.round(entry.x() + entry.width() * 0.40F);
@@ -500,11 +522,12 @@ public abstract class OptionsScreenMixin extends Screen {
         context.fill(trackLeft, trackY - 2, knobX, trackY + 2, P3RSettingsShell.RED);
         int knob = Math.max(4, Math.round(5.0F * entry.uiScale()));
         context.fill(knobX - knob, trackY - knob, knobX + knob, trackY + knob,
-                selection > 0.08F ? P3RSettingsShell.INK : P3RSettingsShell.WHITE);
-        context.drawTextWithShadow(this.textRenderer, value,
+                selection > 0.08F ? P3RSettingsShell.configSelectedText()
+                        : P3RSettingsShell.WHITE);
+        context.drawText(this.textRenderer, value,
                 trackRight - this.textRenderer.getWidth(value),
                 trackY - Math.max(12, Math.round(14.0F * entry.uiScale())),
-                (alpha << 24) | (color & 0x00FFFFFF));
+                (alpha << 24) | (color & 0x00FFFFFF), selection <= 0.08F);
     }
 
     @Unique

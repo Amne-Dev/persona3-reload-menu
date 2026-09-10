@@ -11,9 +11,10 @@ import net.minecraft.Util;
 import org.lwjgl.glfw.GLFW;
 
 public final class P3RMenuSettingsScreen extends Screen {
-    private static final int DONE = 2;
+    private static final int NIGHT_MODE = 2;
+    private static final int DONE = 3;
     private final Screen parent;
-    private final float[] selection = {1.0F, 0.0F, 0.0F};
+    private final float[] selection = {1.0F, 0.0F, 0.0F, 0.0F};
     private int selected;
     private long startedAt;
     private long lastFrame;
@@ -53,10 +54,11 @@ public final class P3RMenuSettingsScreen extends Screen {
             P3RGraphics.fittedText(graphics, font, label(index), left + 8,
                     y + rowHeight * 0.52F, right - left - 16,
                     1.38F * P3RGraphics.scale(width, height),
-                    index == selected ? P3RGraphics.INK : P3RGraphics.CYAN, false);
+                    index == selected ? P3RGraphics.configSelectedText() : P3RGraphics.CYAN,
+                    false);
         }
         P3RGraphics.fittedText(graphics, font,
-                P3RGraphics.bold("CUSTOM CHAT CHANGES THE IN-GAME CHAT PANEL AND ITS OPENING MOTION"),
+                P3RGraphics.bold(hint()),
                 width * 0.075F, height * 0.70F, width * 0.60F,
                 P3RGraphics.scale(width, height), P3RGraphics.CYAN, false);
         P3RGraphics.configFooter(graphics, font, null, width, height, intro);
@@ -87,11 +89,11 @@ public final class P3RMenuSettingsScreen extends Screen {
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_W) {
-            selected = Math.floorMod(selected - 1, 3);
+            selected = Math.floorMod(selected - 1, DONE + 1);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_DOWN || keyCode == GLFW.GLFW_KEY_S) {
-            selected = Math.floorMod(selected + 1, 3);
+            selected = Math.floorMod(selected + 1, DONE + 1);
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER
@@ -99,9 +101,10 @@ public final class P3RMenuSettingsScreen extends Screen {
             activate();
             return true;
         }
-        if ((keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
-                || keyCode == GLFW.GLFW_KEY_A || keyCode == GLFW.GLFW_KEY_D) && selected == 1) {
-            P3RConfig.toggleCustomChat();
+        if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_RIGHT
+                || keyCode == GLFW.GLFW_KEY_A || keyCode == GLFW.GLFW_KEY_D) {
+            if (selected == 1) P3RConfig.toggleCustomChat();
+            if (selected == NIGHT_MODE) P3RConfig.toggleNightMode();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
@@ -118,6 +121,8 @@ public final class P3RMenuSettingsScreen extends Screen {
                     () -> minecraft.setScreen(new WallpaperScreen(this)));
         } else if (selected == 1) {
             P3RConfig.toggleCustomChat();
+        } else if (selected == NIGHT_MODE) {
+            P3RConfig.toggleNightMode();
         } else {
             closeAnimated();
         }
@@ -134,8 +139,18 @@ public final class P3RMenuSettingsScreen extends Screen {
         return P3RGraphics.bold(switch (index) {
             case 0 -> "WALLPAPER...";
             case 1 -> "CUSTOM CHAT: " + (P3RConfig.customChat() ? "ON" : "OFF");
+            case NIGHT_MODE -> "NIGHT MODE: " + (P3RConfig.nightMode() ? "ON" : "OFF");
             default -> "DONE";
         });
+    }
+
+    private String hint() {
+        return switch (selected) {
+            case 0 -> "CHOOSE THE BACKGROUND USED THROUGHOUT THE P3R MENU";
+            case 1 -> "CUSTOM CHAT CHANGES THE IN-GAME CHAT PANEL AND ITS OPENING MOTION";
+            case NIGHT_MODE -> "NIGHT MODE DARKENS BRIGHT PANELS FOR LOW-LIGHT PLAY";
+            default -> "RETURN TO CONFIGURATION SETTINGS";
+        };
     }
 
     private int rowY(int index) {

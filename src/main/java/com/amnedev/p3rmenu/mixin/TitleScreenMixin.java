@@ -6,6 +6,7 @@ import com.amnedev.p3rmenu.util.P3RLayout.MenuEntry;
 import com.amnedev.p3rmenu.util.TransitionManager;
 import com.amnedev.p3rmenu.util.WallpaperManager;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -28,6 +29,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,11 +53,24 @@ public abstract class TitleScreenMixin extends Screen {
     private static final int P3R_CYAN = 0xFF58E7FF;
     @Unique
     private static final int P3R_TEXT_SHADOW = 0xFF52596A;
+    @Unique
+    private static final String P3R_ESSENTIAL_PROXY_CLASS =
+            "gg.essential.gui.proxies.EssentialProxyElement";
+    @Unique
+    private static boolean p3r_checkedEssentialProxyClass;
+    @Unique
+    private static Class<?> p3r_essentialProxyClass;
 
     @Unique
     private final List<ClickableWidget> p3r_menuItems = new ArrayList<>();
     @Unique
     private final List<ClickableWidget> p3r_utilityItems = new ArrayList<>();
+    @Unique
+    private final List<ClickableWidget> p3r_passthroughItems = new ArrayList<>();
+    @Unique
+    private final Map<ClickableWidget, String> p3r_essentialActions = new HashMap<>();
+    @Unique
+    private ClickableWidget p3r_essentialPlayer;
     @Unique
     private final Map<ClickableWidget, Text> p3r_labels = new HashMap<>();
     @Unique
@@ -81,6 +97,9 @@ public abstract class TitleScreenMixin extends Screen {
     private void p3r_init(CallbackInfo ci) {
         this.p3r_menuItems.clear();
         this.p3r_utilityItems.clear();
+        this.p3r_passthroughItems.clear();
+        this.p3r_essentialActions.clear();
+        this.p3r_essentialPlayer = null;
         this.p3r_labels.clear();
         this.p3r_selectionProgress.clear();
         p3r_syncWidgets();
@@ -95,7 +114,9 @@ public abstract class TitleScreenMixin extends Screen {
         ci.cancel();
 
         p3r_syncWidgets();
+        p3r_prepareEssentialActions(context, mouseX, mouseY, delta);
         p3r_renderBackgroundLayer(context);
+        p3r_renderEssentialPlayer(context, mouseX, mouseY, delta);
         p3r_updateAnimationState();
         p3r_updateMouseSelection(mouseX, mouseY);
 
@@ -112,6 +133,12 @@ public abstract class TitleScreenMixin extends Screen {
         List<? extends Element> currentChildren = this.children();
         this.p3r_menuItems.removeIf(widget -> !currentChildren.contains(widget));
         this.p3r_utilityItems.removeIf(widget -> !currentChildren.contains(widget));
+        this.p3r_passthroughItems.removeIf(widget -> !currentChildren.contains(widget));
+        this.p3r_essentialActions.keySet().removeIf(widget -> !currentChildren.contains(widget));
+        if (this.p3r_essentialPlayer != null
+                && !currentChildren.contains(this.p3r_essentialPlayer)) {
+            this.p3r_essentialPlayer = null;
+        }
         this.p3r_labels.keySet().removeIf(widget -> !currentChildren.contains(widget));
         this.p3r_selectionProgress.keySet().removeIf(widget -> !currentChildren.contains(widget));
 
@@ -120,19 +147,62 @@ public abstract class TitleScreenMixin extends Screen {
                 continue;
             }
 
-            // Keep each real widget and its original action as the compatibility
-            // layer. Only the vanilla visual is suppressed and replaced here.
-            widget.visible = false;
             if (this.p3r_labels.containsKey(widget)) {
+                // This is a widget whose visuals P3R already owns.
+                widget.visible = this.p3r_essentialActions.containsKey(widget);
+                continue;
+            }
+
+            if (p3r_isExternallyManagedWidget(widget)) {
+                String id = p3r_essentialId(widget);
+                if ("player".equals(id)) {
+                    this.p3r_essentialPlayer = widget;
+                    widget.visible = true;
+                    continue;
+                }
+                if (!widget.visible) {
+                    if (!this.p3r_passthroughItems.contains(widget)) {
+                        this.p3r_passthroughItems.add(widget);
+                    }
+                    continue;
+                }
+                String action = p3r_essentialAction(id);
+                String label = p3r_essentialLabel(action);
+                if (action != null && label != null
+                        && !this.p3r_essentialActions.containsValue(action)) {
+                    this.p3r_essentialActions.put(widget, action);
+                    this.p3r_labels.put(widget, p3r_boldLabel(label));
+                    if (p3r_isEssentialFooterAction(action)) {
+                        this.p3r_utilityItems.add(widget);
+                    } else {
+                        this.p3r_menuItems.add(widget);
+                    }
+                    widget.visible = true;
+                } else if (!this.p3r_passthroughItems.contains(widget)) {
+                    this.p3r_passthroughItems.add(widget);
+                }
+                continue;
+            }
+            // Invisible children may be internal controls which another mod enables later.
+            if (!widget.visible) {
+                continue;
+            }
+
+            if (p3r_isHiddenWidget(widget)) {
+                widget.visible = false;
+                continue;
+            }
+
+            String rawLabel = widget.getMessage().getString();
+            if (rawLabel.isBlank()) {
                 continue;
             }
 
             this.p3r_labels.put(widget, p3r_createLabel(widget));
-            if (p3r_isHiddenWidget(widget)) {
-                continue;
-            } else if (p3r_isUtilityWidget(widget)) {
+            widget.visible = false;
+            if (p3r_isUtilityWidget(widget)) {
                 this.p3r_utilityItems.add(widget);
-            } else if (!widget.getMessage().getString().isBlank()) {
+            } else {
                 this.p3r_menuItems.add(widget);
             }
         }
@@ -271,11 +341,17 @@ public abstract class TitleScreenMixin extends Screen {
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
+        for (ClickableWidget widget : this.p3r_passthroughItems) {
+            if (widget.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+
         List<MenuEntry> menuEntries = p3r_layoutMenu();
         for (int i = 0; i < menuEntries.size(); i++) {
             MenuEntry entry = menuEntries.get(i);
             if (entry.contains(mouseX, mouseY)) {
-                this.p3r_selectedIndex = i;
+                this.p3r_selectedIndex = entry.sourceIndex;
                 this.p3r_mouseIsNavigationSource = true;
                 p3r_activate(entry.widget, mouseX, mouseY);
                 return true;
@@ -289,7 +365,21 @@ public abstract class TitleScreenMixin extends Screen {
             }
         }
 
-        return false;
+        // Widgets deliberately left under another mod's ownership must still get
+        // their native input path.
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if (TransitionManager.isBlockingInput()) {
+            return true;
+        }
+        if (amount != 0.0D && !this.p3r_menuItems.isEmpty()) {
+            p3r_moveSelection(amount > 0.0D ? -1 : 1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, amount);
     }
 
     @Override
@@ -371,8 +461,9 @@ public abstract class TitleScreenMixin extends Screen {
         List<MenuEntry> entries = p3r_layoutMenu();
         for (int i = 0; i < entries.size(); i++) {
             if (entries.get(i).contains(mouseX, mouseY)) {
-                if (i != this.p3r_selectedIndex) {
-                    p3r_selectIndex(i, true);
+                int sourceIndex = entries.get(i).sourceIndex;
+                if (sourceIndex != this.p3r_selectedIndex) {
+                    p3r_selectIndex(sourceIndex, true);
                 }
                 return;
             }
@@ -411,6 +502,10 @@ public abstract class TitleScreenMixin extends Screen {
             return;
         }
         widget.playDownSound(this.client.getSoundManager());
+        if (this.p3r_essentialActions.containsKey(widget)) {
+            p3r_invokeEssentialAction(widget, mouseX, mouseY);
+            return;
+        }
         TransitionManager.startOut(this.p3r_labels.getOrDefault(widget, p3r_createLabel(widget)), () -> {
             if (widget instanceof PressableWidget pressable) {
                 pressable.onPress();
@@ -418,6 +513,64 @@ public abstract class TitleScreenMixin extends Screen {
                 widget.onClick(mouseX, mouseY);
             }
         });
+    }
+
+    @Unique
+    private void p3r_prepareEssentialActions(DrawContext context, int mouseX,
+            int mouseY, float delta) {
+        if (this.p3r_essentialActions.isEmpty()) {
+            return;
+        }
+        context.enableScissor(0, 0, 0, 0);
+        try {
+            for (ClickableWidget widget : this.p3r_essentialActions.keySet()) {
+                widget.render(context, mouseX, mouseY, delta);
+            }
+        } finally {
+            context.disableScissor();
+        }
+    }
+
+    @Unique
+    private void p3r_renderEssentialPlayer(DrawContext context, int mouseX,
+            int mouseY, float delta) {
+        if (this.p3r_essentialPlayer == null) {
+            return;
+        }
+        float uiScale = p3r_uiScale();
+        int playerHeight = Math.max(1,
+                Math.round(Math.min(this.height * 0.62F, 360.0F * uiScale)));
+        int playerWidth = Math.max(1,
+                Math.round(Math.min(this.width * 0.26F, playerHeight * 0.58F)));
+        int x = Math.round(Math.max(18.0F * uiScale, this.width * 0.08F));
+        int y = Math.round(Math.max(76.0F * uiScale, this.height * 0.24F));
+        p3r_applyHitbox(this.p3r_essentialPlayer, x, y, playerWidth, playerHeight);
+        this.p3r_essentialPlayer.render(context, mouseX, mouseY, delta);
+    }
+
+    @Unique
+    private void p3r_invokeEssentialAction(ClickableWidget widget, double mouseX, double mouseY) {
+        try {
+            Object component = widget.getClass().getMethod("getEssentialComponent").invoke(widget);
+            if (component != null) {
+                for (Method method : widget.getClass().getMethods()) {
+                    if (method.getName().equals("click") && method.getParameterCount() == 1
+                            && method.getParameterTypes()[0].isInstance(component)) {
+                        method.invoke(widget, component);
+                        return;
+                    }
+                }
+            }
+        } catch (InvocationTargetException exception) {
+            p3r_rethrow(exception.getCause());
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            // Fall through to the proxy's vanilla callback for forward compatibility.
+        }
+        if (widget instanceof PressableWidget pressable) {
+            pressable.onPress();
+        } else {
+            widget.onClick(mouseX, mouseY);
+        }
     }
 
     @Unique
@@ -433,11 +586,21 @@ public abstract class TitleScreenMixin extends Screen {
         float bottomY = this.height - Math.max(45.0F, 38.0F * uiScale);
         float availableHeight = Math.max(1.0F, bottomY - minimumY);
 
+        // A menu can receive arbitrary third-party entries. Keep a readable row
+        // height and window the list around the current selection instead of
+        // allowing rows to leave the viewport.
         // Keep the standard title menu intentionally large, then scale both its
         // typography and rhythm when mods inject more (or unusually long) buttons.
         float baseStep = 24.5F * uiScale;
-        float verticalDensity = itemCount <= 1 ? 1.0F
-                : availableHeight / ((itemCount - 1) * baseStep);
+        float minimumStep = Math.max(12.0F, baseStep * 0.46F);
+        int maximumVisible = Math.max(1,
+                (int) Math.floor(availableHeight / minimumStep) + 1);
+        int visibleCount = Math.min(itemCount, maximumVisible);
+        int firstVisible = MathHelper.clamp(
+                this.p3r_selectedIndex - visibleCount / 2,
+                0, Math.max(0, itemCount - visibleCount));
+        float verticalDensity = visibleCount <= 1 ? 1.0F
+                : availableHeight / ((visibleCount - 1) * baseStep);
         float baseTextScale = 2.75F * uiScale;
         float widestLabel = 1.0F;
         for (ClickableWidget widget : this.p3r_menuItems) {
@@ -449,7 +612,7 @@ public abstract class TitleScreenMixin extends Screen {
         float density = MathHelper.clamp(Math.min(verticalDensity, horizontalDensity), 0.46F, 1.0F);
         float textScale = baseTextScale * density;
         float step = Math.max(12.0F, baseStep * density);
-        float totalHeight = (itemCount - 1) * step;
+        float totalHeight = (visibleCount - 1) * step;
         float desiredCenterY = this.height * 0.775F;
         float maximumY = Math.max(minimumY,
                 this.height - Math.max(45.0F, 38.0F * uiScale) - totalHeight);
@@ -457,16 +620,17 @@ public abstract class TitleScreenMixin extends Screen {
         float centerX = MathHelper.clamp(this.width * 0.83F,
                 this.width * 0.62F, this.width - 68.0F * uiScale);
 
-        for (int i = 0; i < this.p3r_menuItems.size(); i++) {
+        for (int slot = 0; slot < visibleCount; slot++) {
+            int i = firstVisible + slot;
             ClickableWidget widget = this.p3r_menuItems.get(i);
             Text label = this.p3r_labels.getOrDefault(widget, p3r_createLabel(widget));
             float textWidth = this.textRenderer.getWidth(label) * textScale;
             float textX = centerX - textWidth * 0.5F;
-            float y = startY + i * step;
+            float y = startY + slot * step;
             float hitPaddingX = Math.max(16.0F, 15.0F * uiScale);
 
             float hitX = Math.min(textX - hitPaddingX, this.width * 0.69F);
-            result.add(new MenuEntry(widget, label, textX, y, textScale, uiScale,
+            result.add(new MenuEntry(i, widget, label, textX, y, textScale, uiScale,
                     hitX, y - step * 0.12F,
                     this.width + 4.0F - hitX,
                     step));
@@ -477,27 +641,65 @@ public abstract class TitleScreenMixin extends Screen {
     @Unique
     private List<FooterEntry> p3r_layoutFooter() {
         List<FooterEntry> result = new ArrayList<>();
-        float uiScale = p3r_uiScale();
-        float scale = MathHelper.clamp(uiScale * 0.78F, 0.68F, 1.0F);
-        float gap = 18.0F * uiScale;
-        float cursorX = this.width - Math.max(14.0F, 18.0F * uiScale);
-        float y = this.height - Math.max(16.0F, 17.0F * uiScale);
+        if (this.p3r_utilityItems.isEmpty()) {
+            return result;
+        }
 
-        for (int i = this.p3r_utilityItems.size() - 1; i >= 0; i--) {
-            ClickableWidget widget = this.p3r_utilityItems.get(i);
+        List<ClickableWidget> orderedItems = new ArrayList<>(this.p3r_utilityItems);
+        orderedItems.sort((left, right) -> Integer.compare(
+                p3r_footerOrder(left), p3r_footerOrder(right)));
+        java.util.Collections.reverse(orderedItems);
+
+        float uiScale = p3r_uiScale();
+        float preferredScale = MathHelper.clamp(uiScale * 0.78F, 0.68F, 1.0F);
+        float margin = Math.max(14.0F, 18.0F * uiScale);
+        float availableWidth = Math.max(1.0F, this.width - margin * 2.0F);
+        float contentUnits = 0.0F;
+        for (ClickableWidget widget : orderedItems) {
+            Text label = this.p3r_labels.getOrDefault(widget, p3r_createLabel(widget));
+            contentUnits += 9.0F + this.textRenderer.getWidth(label);
+        }
+
+        int gapCount = Math.max(0, orderedItems.size() - 1);
+        float preferredGap = 18.0F * preferredScale;
+        float preferredWidth = contentUnits * preferredScale + gapCount * preferredGap;
+        float compression = Math.min(1.0F, availableWidth / Math.max(1.0F, preferredWidth));
+        float gap = Math.max(4.0F, preferredGap * compression);
+        float scale = Math.min(preferredScale,
+                Math.max(0.01F, (availableWidth - gapCount * gap) / Math.max(1.0F, contentUnits)));
+        float y = this.height - Math.max(16.0F, 17.0F * uiScale);
+        float cursorX = this.width - margin;
+        for (int i = orderedItems.size() - 1; i >= 0; i--) {
+            ClickableWidget widget = orderedItems.get(i);
             Text label = this.p3r_labels.getOrDefault(widget, p3r_createLabel(widget));
             float contentWidth = (9.0F + this.textRenderer.getWidth(label)) * scale;
             float x = cursorX - contentWidth;
+            p3r_applyHitbox(widget, x - 2.0F, y - 3.0F,
+                    contentWidth + 4.0F, 14.0F * scale + 6.0F);
             result.add(0, new FooterEntry(widget, label, x, y, scale,
-                    x - 4.0F, y - 4.0F, contentWidth + 8.0F, 14.0F * scale + 8.0F));
+                    x - 2.0F, y - 3.0F, contentWidth + 4.0F, 14.0F * scale + 6.0F));
             cursorX = x - gap;
         }
         return result;
     }
 
     @Unique
+    private static void p3r_applyHitbox(ClickableWidget widget, float x, float y,
+            float hitWidth, float hitHeight) {
+        widget.setX(Math.round(x));
+        widget.setY(Math.round(y));
+        widget.setWidth(Math.max(1, Math.round(hitWidth)));
+        ((ClickableWidgetAccessor) widget).p3r_setHeight(Math.max(1, Math.round(hitHeight)));
+    }
+
+    @Unique
     private Text p3r_createLabel(ClickableWidget widget) {
         String label = widget.getMessage().getString().strip().toUpperCase(Locale.ROOT);
+        return p3r_boldLabel(label);
+    }
+
+    @Unique
+    private static Text p3r_boldLabel(String label) {
         return Text.literal(label).setStyle(Style.EMPTY.withBold(true));
     }
 
@@ -517,6 +719,14 @@ public abstract class TitleScreenMixin extends Screen {
     }
 
     @Unique
+    private int p3r_footerOrder(ClickableWidget widget) {
+        if (widget.getMessage().getString().toLowerCase(Locale.ROOT).contains("quit")) {
+            return 0;
+        }
+        return "account".equals(this.p3r_essentialActions.get(widget)) ? 1 : 2;
+    }
+
+    @Unique
     private boolean p3r_isHiddenWidget(ClickableWidget widget) {
         TextContent content = widget.getMessage().getContent();
         if (content instanceof TranslatableTextContent translatable) {
@@ -528,6 +738,73 @@ public abstract class TitleScreenMixin extends Screen {
 
         String label = widget.getMessage().getString().toLowerCase(Locale.ROOT);
         return label.contains("copyright") || label.contains("do not distribute");
+    }
+
+    @Unique
+    private static boolean p3r_isExternallyManagedWidget(ClickableWidget widget) {
+        if (!FabricLoader.getInstance().isModLoaded("essential")
+                && !FabricLoader.getInstance().isModLoaded("essential-container")) {
+            return false;
+        }
+        if (!p3r_checkedEssentialProxyClass) {
+            p3r_checkedEssentialProxyClass = true;
+            try {
+                p3r_essentialProxyClass = Class.forName(P3R_ESSENTIAL_PROXY_CLASS, false,
+                        widget.getClass().getClassLoader());
+            } catch (ClassNotFoundException | LinkageError ignored) {
+                p3r_essentialProxyClass = null;
+            }
+        }
+        return p3r_essentialProxyClass != null
+                && p3r_essentialProxyClass.isInstance(widget);
+    }
+
+    @Unique
+    private static String p3r_essentialId(ClickableWidget widget) {
+        try {
+            Object value = widget.getClass().getMethod("getEssentialId").invoke(widget);
+            return value instanceof String id ? id : null;
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return null;
+        }
+    }
+
+    @Unique
+    private static String p3r_essentialAction(String id) {
+        if (id == null) return null;
+        return switch (id) {
+            case "wardrobe_2" -> "wardrobe";
+            case "invite_host", "world_host", "social", "wardrobe", "pictures",
+                    "settings", "account" -> id;
+            default -> null;
+        };
+    }
+
+    @Unique
+    private static String p3r_essentialLabel(String action) {
+        if (action == null) return null;
+        return switch (action) {
+            case "invite_host" -> "INVITE FRIENDS";
+            case "world_host" -> "HOST WORLD";
+            case "social" -> "SOCIAL";
+            case "wardrobe" -> "WARDROBE";
+            case "pictures" -> "PICTURES";
+            case "settings" -> "ESSENTIAL SETTINGS";
+            case "account" -> "ACCOUNT";
+            default -> null;
+        };
+    }
+
+    @Unique
+    private static boolean p3r_isEssentialFooterAction(String action) {
+        return !"invite_host".equals(action) && !"world_host".equals(action);
+    }
+
+    @Unique
+    private static void p3r_rethrow(Throwable throwable) {
+        if (throwable instanceof RuntimeException runtime) throw runtime;
+        if (throwable instanceof Error error) throw error;
+        throw new RuntimeException(throwable);
     }
 
     @Unique

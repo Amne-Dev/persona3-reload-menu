@@ -7,6 +7,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerServerListWidget;
 import net.minecraft.client.gui.screen.option.LanguageOptionsScreen;
+import net.minecraft.client.gui.screen.option.ControlsListWidget;
+import net.minecraft.client.gui.screen.option.KeybindsScreen;
 import net.minecraft.client.gui.screen.world.WorldListWidget;
 import net.minecraft.client.gui.widget.EntryListWidget;
 import net.minecraft.util.math.MathHelper;
@@ -37,7 +39,10 @@ public abstract class EntryListWidgetMixin {
 
     @Inject(method = "getRowLeft", at = @At("RETURN"), cancellable = true)
     private void p3r_alignPersonaRows(CallbackInfoReturnable<Integer> cir) {
-        if (p3r_isPersonaList()) {
+        if (p3r_isKeybindList()) {
+            Screen screen = MinecraftClient.getInstance().currentScreen;
+            cir.setReturnValue(P3RSettingsShell.contentLeft(screen.width));
+        } else if (p3r_isPersonaList()) {
             int width = MinecraftClient.getInstance().getWindow().getScaledWidth();
             cir.setReturnValue(Math.round(width * 0.385F));
         } else if (p3r_isLanguageList()) {
@@ -117,9 +122,33 @@ public abstract class EntryListWidgetMixin {
     private void p3r_renderEntrySurface(DrawContext context, int mouseX, int mouseY,
             float delta, int index, int x, int y, int entryWidth, int entryHeight,
             CallbackInfo ci) {
+        boolean keybind = p3r_isKeybindList();
         boolean persona = p3r_isPersonaList();
         boolean language = p3r_isLanguageList();
-        if (!persona && !language) {
+        if (!keybind && !persona && !language) {
+            return;
+        }
+
+        if (keybind) {
+            Object entry = ((EntryListWidget<?>) (Object) this).children().get(index);
+            boolean category = entry.getClass().getSimpleName().equals("CategoryEntry");
+            if (category) {
+                context.fill(x, y + 2, x + entryWidth, y + entryHeight - 2, 0xD5090B18);
+                context.fill(x, y + 2, x + entryWidth, y + 3, P3RSettingsShell.CYAN);
+                return;
+            }
+            boolean active = this.isSelectedEntry(index)
+                    || mouseX >= x && mouseX <= x + entryWidth
+                    && mouseY >= y && mouseY <= y + entryHeight;
+            if (active) {
+                int rowBottom = y + Math.max(1, entryHeight - 2);
+                context.fill(x, y, x + entryWidth, rowBottom,
+                        P3RSettingsShell.configSelectionSurface());
+                context.fill(x, y, x + entryWidth, y + 2, P3RSettingsShell.RED);
+                context.fill(x, rowBottom - 1, x + entryWidth, rowBottom,
+                        P3RSettingsShell.PINK);
+                context.fill(x, y, x + 2, rowBottom, P3RSettingsShell.configSelectedText());
+            }
             return;
         }
 
@@ -144,12 +173,21 @@ public abstract class EntryListWidgetMixin {
     @Inject(method = "drawSelectionHighlight", at = @At("HEAD"), cancellable = true)
     private void p3r_drawPersonaSelection(DrawContext context, int x, int y,
             int width, int height, int color, CallbackInfo ci) {
+        boolean keybind = p3r_isKeybindList();
         boolean persona = p3r_isPersonaList();
         boolean language = p3r_isLanguageList();
-        if (!persona && !language) {
+        if (!keybind && !persona && !language) {
             return;
         }
         ci.cancel();
+        if (keybind) {
+            int bottom = y + Math.max(1, height - 2);
+            context.fill(x, y, x + width, bottom, P3RSettingsShell.configSelectionSurface());
+            context.fill(x, y, x + width, y + 2, P3RSettingsShell.RED);
+            context.fill(x, bottom - 1, x + width, bottom, P3RSettingsShell.PINK);
+            context.fill(x, y, x + 2, bottom, P3RSettingsShell.configSelectedText());
+            return;
+        }
         context.fill(x - 4, y - 2, x + width + 4, y + height + 2,
                 language ? 0xEA080C74 : 0xF0080CB5);
         context.fill(x - 4, y - 2, x + width + 4, y + 1,
@@ -168,6 +206,11 @@ public abstract class EntryListWidgetMixin {
 
     private boolean p3r_isLanguageList() {
         return MinecraftClient.getInstance().currentScreen instanceof LanguageOptionsScreen;
+    }
+
+    private boolean p3r_isKeybindList() {
+        return (Object) this instanceof ControlsListWidget
+                && MinecraftClient.getInstance().currentScreen instanceof KeybindsScreen;
     }
 
     private boolean p3r_shouldStyleScrollbar() {

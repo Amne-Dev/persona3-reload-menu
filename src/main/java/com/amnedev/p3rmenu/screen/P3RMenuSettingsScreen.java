@@ -15,13 +15,14 @@ import org.lwjgl.glfw.GLFW;
 public final class P3RMenuSettingsScreen extends Screen {
     private static final int WALLPAPER = 0;
     private static final int CUSTOM_CHAT = 1;
-    private static final int DONE = 2;
+    private static final int NIGHT_MODE = 2;
+    private static final int DONE = 3;
 
     private final Screen parent;
     private int selected;
     private long startedAt;
     private long lastFrameAt;
-    private final float[] selection = {1.0F, 0.0F, 0.0F};
+    private final float[] selection = {1.0F, 0.0F, 0.0F, 0.0F};
 
     public P3RMenuSettingsScreen(Screen parent) {
         super(Text.literal("P3R Menu Settings"));
@@ -56,11 +57,12 @@ public final class P3RMenuSettingsScreen extends Screen {
             }
             P3RSettingsShell.drawFittedText(context, label(index),
                     left + 9, y + rowHeight * 0.5F, right - left - 18,
-                    index == selected ? P3RSettingsShell.INK : P3RSettingsShell.CYAN,
+                    index == selected ? P3RSettingsShell.configSelectedText()
+                            : P3RSettingsShell.CYAN,
                     false);
         }
 
-        Text hint = Text.literal("CUSTOM CHAT CHANGES THE IN-GAME CHAT PANEL AND ITS OPENING MOTION")
+        Text hint = Text.literal(hint())
                 .setStyle(Style.EMPTY.withBold(true));
         P3RSettingsShell.drawFittedText(context, hint, width * 0.075F, height * 0.70F,
                 width * 0.60F, P3RSettingsShell.CYAN, false);
@@ -105,9 +107,8 @@ public final class P3RMenuSettingsScreen extends Screen {
         }
         if (keyCode == GLFW.GLFW_KEY_LEFT || keyCode == GLFW.GLFW_KEY_A
                 || keyCode == GLFW.GLFW_KEY_RIGHT || keyCode == GLFW.GLFW_KEY_D) {
-            if (selected == CUSTOM_CHAT) {
-                toggleChat();
-            }
+            if (selected == CUSTOM_CHAT) toggleChat();
+            if (selected == NIGHT_MODE) toggleNightMode();
             return true;
         }
         if (keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER
@@ -129,6 +130,8 @@ public final class P3RMenuSettingsScreen extends Screen {
     private void activate() {
         if (selected == CUSTOM_CHAT) {
             toggleChat();
+        } else if (selected == NIGHT_MODE) {
+            toggleNightMode();
         } else if (selected == WALLPAPER) {
             TransitionManager.startOut(Text.literal("WALLPAPER"),
                     () -> client.setScreen(new WallpaperScreen(this)));
@@ -145,22 +148,45 @@ public final class P3RMenuSettingsScreen extends Screen {
         }
     }
 
+    private void toggleNightMode() {
+        P3RConfig.toggleNightMode();
+        playToggleSound();
+    }
+
+    private void playToggleSound() {
+        if (client != null) {
+            client.getSoundManager().play(net.minecraft.client.sound.PositionedSoundInstance
+                    .master(net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
+    }
+
     private Text label(int index) {
         String value = switch (index) {
             case WALLPAPER -> "WALLPAPER...";
             case CUSTOM_CHAT -> "CUSTOM CHAT: "
                     + (P3RConfig.isCustomChatEnabled() ? "ON" : "OFF");
+            case NIGHT_MODE -> "NIGHT MODE: "
+                    + (P3RConfig.isNightModeEnabled() ? "ON" : "OFF");
             default -> "DONE";
         };
         return Text.literal(value).setStyle(Style.EMPTY.withBold(true));
     }
 
     private void move(int amount) {
-        selected = Math.floorMod(selected + amount, 3);
+        selected = Math.floorMod(selected + amount, DONE + 1);
         if (client != null) {
             client.getSoundManager().play(net.minecraft.client.sound.PositionedSoundInstance
                     .master(net.minecraft.sound.SoundEvents.UI_BUTTON_CLICK, 1.0F));
         }
+    }
+
+    private String hint() {
+        return switch (selected) {
+            case WALLPAPER -> "CHOOSE THE BACKGROUND USED THROUGHOUT THE P3R MENU";
+            case CUSTOM_CHAT -> "CUSTOM CHAT CHANGES THE IN-GAME CHAT PANEL AND ITS OPENING MOTION";
+            case NIGHT_MODE -> "NIGHT MODE DARKENS BRIGHT PANELS FOR LOW-LIGHT PLAY";
+            default -> "RETURN TO CONFIGURATION SETTINGS";
+        };
     }
 
     private void updateMouse(int mouseX, int mouseY) {

@@ -8,6 +8,7 @@ public final class P3RLayout {
     }
 
     public static final class MenuEntry {
+        public final int sourceIndex;
         public final ClickableWidget widget;
         public final Text label;
         public final float textX;
@@ -19,9 +20,10 @@ public final class P3RLayout {
         private final float hitWidth;
         private final float hitHeight;
 
-        public MenuEntry(ClickableWidget widget, Text label, float textX, float y,
+        public MenuEntry(int sourceIndex, ClickableWidget widget, Text label, float textX, float y,
                 float textScale, float uiScale,
                 float hitX, float hitY, float hitWidth, float hitHeight) {
+            this.sourceIndex = sourceIndex;
             this.widget = widget;
             this.label = label;
             this.textX = textX;

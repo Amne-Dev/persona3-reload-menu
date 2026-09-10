@@ -66,9 +66,13 @@ public abstract class KeybindsScreenMixin extends Screen {
             }
         }
         if (this.p3r_controlsList != null) {
-            this.p3r_controlsList.updateSize(this.width, this.height,
-                    Math.max(42, Math.round(this.height * 0.105F)),
+            this.p3r_controlsList.updateSize(
+                    P3RSettingsShell.keybindListWidth(this.width, this.height),
+                    this.height,
+                    P3RSettingsShell.keybindListTop(this.height),
                     Math.round(this.height * 0.80F));
+            this.p3r_controlsList.setLeftPos(
+                    P3RSettingsShell.keybindListLeft(this.width, this.height));
             this.p3r_controlsList.setRenderBackground(false);
             this.p3r_controlsList.setRenderHorizontalShadows(false);
         }

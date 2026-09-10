@@ -73,7 +73,7 @@ public final class WallpaperScreen extends Screen {
             Text feedback = Text.literal(this.status).setStyle(Style.EMPTY.withBold(true));
             P3RSettingsShell.drawFittedText(context, feedback,
                     this.width * 0.075F, this.height * 0.79F,
-                    this.width * 0.55F, P3RSettingsShell.INK, false);
+                    this.width * 0.55F, P3RSettingsShell.configSelectedText(), false);
         }
 
         P3RSettingsShell.renderDetailFooter(context, this.width, this.height, intro);
@@ -95,7 +95,8 @@ public final class WallpaperScreen extends Screen {
                 .setStyle(Style.EMPTY.withBold(true));
         P3RSettingsShell.drawFittedText(context, label,
                 left + 8, y + height * 0.5F, right - left - 16,
-                selected ? P3RSettingsShell.INK : P3RSettingsShell.CYAN, false);
+                selected ? P3RSettingsShell.configSelectedText() : P3RSettingsShell.CYAN,
+                false);
     }
 
     @Override

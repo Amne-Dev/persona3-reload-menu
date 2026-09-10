@@ -5,6 +5,7 @@ import com.amnedev.p3rmenu.v262.P3RGraphics;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.OptionsList;
 import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.options.controls.KeyBindsList;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
@@ -35,10 +36,19 @@ public abstract class OptionsSubScreenMixin extends Screen {
 
     @Inject(method = "repositionElements", at = @At("TAIL"))
     private void p3r_layoutOptions(CallbackInfo ci) {
+        int top = Math.max(42, Math.round(height * 0.105F));
+        int bottom = Math.round(height * 0.80F);
         if (list != null) {
-            int top = Math.max(42, Math.round(height * 0.105F));
-            int bottom = Math.round(height * 0.80F);
             list.updateSizeAndPosition(width, Math.max(1, bottom - top), 0, top);
+        }
+        for (GuiEventListener child : children()) {
+            if (child instanceof KeyBindsList keybindsList) {
+                int keybindTop = P3RGraphics.keybindListTop(height);
+                keybindsList.updateSizeAndPosition(
+                        P3RGraphics.keybindListWidth(width, height),
+                        Math.max(1, bottom - keybindTop),
+                        P3RGraphics.keybindListLeft(width, height), keybindTop);
+            }
         }
         P3RGraphics.layoutFooterButtons(this);
     }

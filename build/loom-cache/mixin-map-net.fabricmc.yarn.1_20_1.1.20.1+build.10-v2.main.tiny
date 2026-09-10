@@ -1,6 +1,9 @@
 v1	named	intermediary
 FIELD	com/amnedev/p3rmenu/mixin/ChatHudMixin	Ljava/util/List;	visibleMessages	field_2064
 FIELD	com/amnedev/p3rmenu/mixin/ChatScreenMixin	Lnet/minecraft/client/gui/widget/TextFieldWidget;	chatField	field_2382
+FIELD	com/amnedev/p3rmenu/mixin/ControlsListWidgetCategoryEntryMixin	I	textWidth	field_2737
+FIELD	com/amnedev/p3rmenu/mixin/ControlsListWidgetKeyBindingEntryMixin	Lnet/minecraft/client/gui/widget/ButtonWidget;	editButton	field_2739
+FIELD	com/amnedev/p3rmenu/mixin/ControlsListWidgetKeyBindingEntryMixin	Lnet/minecraft/client/gui/widget/ButtonWidget;	resetButton	field_2743
 FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	top	field_19085
 FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	bottom	field_19086
 FIELD	com/amnedev/p3rmenu/mixin/EntryListWidgetMixin	I	itemHeight	field_22741

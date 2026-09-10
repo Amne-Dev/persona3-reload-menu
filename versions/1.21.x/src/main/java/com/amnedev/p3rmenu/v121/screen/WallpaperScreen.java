@@ -70,7 +70,7 @@ public final class WallpaperScreen extends Screen {
         int rowHeight = Math.max(22, Math.round(29.0F * P3RGraphics.scale(width, height)));
         if (selected) {
             P3RGraphics.skewedRect(graphics, left - 34, y, right - left + 46,
-                    rowHeight, 24, P3RGraphics.WHITE);
+                    rowHeight, 24, P3RGraphics.configSelectionSurface());
             P3RGraphics.skewedRect(graphics, left - 46, y + 2, 18,
                     rowHeight - 4, 8, P3RGraphics.PINK);
         } else {
@@ -80,7 +80,7 @@ public final class WallpaperScreen extends Screen {
                 P3RGraphics.bold(wallpapers.get(index).name()),
                 left + 10, y + rowHeight * 0.52F, right - left - 20,
                 1.2F * P3RGraphics.scale(width, height),
-                selected ? P3RGraphics.INK : P3RGraphics.PALE, false);
+                selected ? P3RGraphics.configSelectedText() : P3RGraphics.PALE, false);
     }
 
     private void drawFooter(GuiGraphics graphics, String value, int x, int y,
@@ -92,7 +92,7 @@ public final class WallpaperScreen extends Screen {
         }
         P3RGraphics.fittedText(graphics, font, P3RGraphics.bold(value), x, y + 3,
                 width, 1.0F * P3RGraphics.scale(this.width, height),
-                hovered ? P3RGraphics.INK : P3RGraphics.CYAN, true);
+                hovered ? P3RGraphics.configSelectedText() : P3RGraphics.CYAN, true);
     }
 
     @Override

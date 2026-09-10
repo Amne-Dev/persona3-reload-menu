@@ -36,6 +36,14 @@ public final class P3RSettingsShell {
     private P3RSettingsShell() {
     }
 
+    public static int configSelectionSurface() {
+        return P3RConfig.isNightModeEnabled() ? 0xFF182541 : WHITE;
+    }
+
+    public static int configSelectedText() {
+        return P3RConfig.isNightModeEnabled() ? 0xFFF5F6F8 : INK;
+    }
+
     public static boolean isSettingsRoot(Screen screen) {
         return screen instanceof OptionsScreen;
     }
@@ -47,6 +55,37 @@ public final class P3RSettingsShell {
 
     public static float uiScale(int width, int height) {
         return MathHelper.clamp(Math.min(width / 960.0F, height / 540.0F), 0.72F, 1.55F);
+    }
+
+    /** Horizontal bounds shared by every control inside the configuration panel. */
+    public static int contentLeft(int width) {
+        return Math.max(8, Math.round(width * 0.095F));
+    }
+
+    public static int contentRight(int width) {
+        return Math.max(contentLeft(width) + 1, Math.round(width * 0.625F));
+    }
+
+    public static int contentWidth(int width) {
+        return contentRight(width) - contentLeft(width);
+    }
+
+    /** Keeps the P3R rail a scaled distance from the content instead of the screen edge. */
+    public static int contentScrollbarX(int width, int height) {
+        int railGap = Math.max(18, Math.round(56.0F * uiScale(width, height)));
+        return Math.max(2, contentLeft(width) - railGap);
+    }
+
+    public static int keybindListLeft(int width, int height) {
+        return Math.max(0, contentScrollbarX(width, height) - 2);
+    }
+
+    public static int keybindListWidth(int width, int height) {
+        return Math.max(1, contentRight(width) + 2 - keybindListLeft(width, height));
+    }
+
+    public static int keybindListTop(int height) {
+        return Math.max(42, Math.round(height * 0.12F));
     }
 
     public static float entrance(long startedAt) {
@@ -90,12 +129,13 @@ public final class P3RSettingsShell {
         int panelBottomRight = Math.round(width * 0.770F - slide);
         int panelBottom = footerTop + 2;
         int echo = Math.round(width * 0.045F);
+        boolean night = P3RConfig.isNightModeEnabled();
         drawSlantedPanel(context, panelTopRight + echo,
-                panelBottomRight + echo, panelBottom, 0x6B203271);
+                panelBottomRight + echo, panelBottom, night ? 0xA0061028 : 0x6B203271);
         drawSlantedPanel(context, panelTopRight,
-                panelBottomRight, panelBottom, 0xEAB7C0D8);
+                panelBottomRight, panelBottom, night ? 0xF0101830 : 0xEAB7C0D8);
 
-        context.fill(0, footerTop, width, height, 0xFFF6F7F8);
+        context.fill(0, footerTop, width, height, night ? 0xFF090E20 : 0xFFF6F7F8);
         context.fill(0, footerTop, Math.round(width * 0.63F * intro),
                 footerTop + Math.max(2, Math.round(height * 0.004F)), 0xFFF0442E);
         RenderSystem.disableBlend();
@@ -120,7 +160,7 @@ public final class P3RSettingsShell {
                 withAlpha(RED, Math.round(255.0F * eased)));
         P3RHelper.drawSkewedRect(context, x - skew, y,
                 Math.max(1, shownRight - x + skew), height, skew,
-                withAlpha(WHITE, Math.round(255.0F * eased)));
+                withAlpha(configSelectionSurface(), Math.round(255.0F * eased)));
         context.fill(x - 3, y, x, y + height,
                 withAlpha(PINK, Math.round(255.0F * eased)));
     }
@@ -150,11 +190,12 @@ public final class P3RSettingsShell {
                 Math.round(width * 0.38F),
                 Math.round(150.0F * uiScale)));
         int laneWidth = Math.max(8, laneRight - laneLeft);
+        boolean night = P3RConfig.isNightModeEnabled();
         drawRightFittedText(context, prompt, laneRight, y, laneWidth,
-                (alpha << 24) | 0x222A3E);
+                withAlpha(night ? 0xFFF5F6F8 : 0xFF222A3E, alpha));
         drawRightFittedText(context, controls, laneRight,
                 y + Math.max(10, Math.round(11.0F * uiScale)), laneWidth,
-                (Math.min(225, alpha) << 24) | 0x3D5875);
+                withAlpha(night ? 0xFF8DAACA : 0xFF3D5875, Math.min(225, alpha)));
     }
 
     public static int footerActionWidth(int width, int height) {
@@ -225,7 +266,8 @@ public final class P3RSettingsShell {
         context.getMatrices().translate(8.0F * uiScale, footerTop + 2.0F * uiScale, 20.0F);
         context.getMatrices().scale(6.7F * uiScale, 6.7F * uiScale, 1.0F);
         context.drawText(MinecraftClient.getInstance().textRenderer, config, 0, 0,
-                (Math.min(145, alpha) << 24) | 0xAAB0B8, false);
+                withAlpha(P3RConfig.isNightModeEnabled() ? 0xFF405577 : 0xFFAAB0B8,
+                        Math.min(145, alpha)), false);
         context.getMatrices().pop();
     }
 
@@ -240,7 +282,7 @@ public final class P3RSettingsShell {
         context.getMatrices().push();
         context.getMatrices().translate(x, centerY - 4.0F * scale, 80.0F);
         context.getMatrices().scale(scale, scale, 1.0F);
-        context.drawText(client.textRenderer, text, 0, 0, color, true);
+        context.drawText(client.textRenderer, text, 0, 0, color, !isDarkText(color));
         context.getMatrices().pop();
     }
 
@@ -253,7 +295,7 @@ public final class P3RSettingsShell {
         context.getMatrices().translate(right - textWidth * scale,
                 top + (1.0F - scale) * 4.0F, 80.0F);
         context.getMatrices().scale(scale, scale, 1.0F);
-        context.drawText(client.textRenderer, text, 0, 0, color, true);
+        context.drawText(client.textRenderer, text, 0, 0, color, !isDarkText(color));
         context.getMatrices().pop();
     }
 
@@ -290,8 +332,8 @@ public final class P3RSettingsShell {
         list.setRenderBackground(false);
         list.setRenderHorizontalShadows(false);
 
-        int left = Math.round(screen.width * 0.095F);
-        int right = Math.round(screen.width * 0.625F);
+        int left = contentLeft(screen.width);
+        int right = contentRight(screen.width);
         int gap = Math.max(6, Math.round(8.0F * uiScale));
         for (Object rawEntry : list.children()) {
             List<ClickableWidget> widgets = new ArrayList<>();
@@ -342,5 +384,12 @@ public final class P3RSettingsShell {
 
     private static int withAlpha(int color, int alpha) {
         return (MathHelper.clamp(alpha, 0, 255) << 24) | (color & 0x00FFFFFF);
+    }
+
+    private static boolean isDarkText(int color) {
+        int red = color >> 16 & 0xFF;
+        int green = color >> 8 & 0xFF;
+        int blue = color & 0xFF;
+        return red * 299 + green * 587 + blue * 114 < 96_000;
     }
 }

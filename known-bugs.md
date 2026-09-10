@@ -1,9 +1,8 @@
 # Known bugs
 
-No currently known unresolved bugs.
-
 ## Resolved
 
+- [x] Vanilla Minecraft option pages no longer crash while transforming the keybind-row mixin with MixinExtras 0.5.4.
 - [x] 1.20.1 settings footer copy does not overlap the detached Done action at high GUI scales.
 - [x] 1.20.1 multiplayer and singleplayer actions wrap without overlapping at GUI scale 4.
 - [x] 1.20.1 list and settings entries remain clickable with the scrollbar on the left.

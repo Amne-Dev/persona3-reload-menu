@@ -104,9 +104,14 @@ public abstract class OptionsScreenMixin extends Screen {
             graphics.pose().translate(entry.x(), entry.y());
             graphics.pose().scale(fittedScale * selectedScale,
                     fittedScale * selectedScale);
-            graphics.drawString(font, label, 1, 1, P3RGraphics.alpha(0xFF263556, intro * 0.55F), false);
+            if (selection <= 0.08F) {
+                graphics.drawString(font, label, 1, 1,
+                        P3RGraphics.alpha(0xFF263556, intro * 0.55F), false);
+            }
             graphics.drawString(font, label, 0, 0,
-                    P3RGraphics.alpha(selection > 0.08F ? P3RGraphics.CONFIG_INK : P3RGraphics.CYAN, intro), false);
+                    P3RGraphics.alpha(selection > 0.08F
+                            ? P3RGraphics.configSelectedText() : P3RGraphics.CYAN, intro),
+                    false);
             graphics.pose().popMatrix();
         }
 
@@ -128,15 +133,22 @@ public abstract class OptionsScreenMixin extends Screen {
     @Unique
     private void p3r_sync() {
         List<? extends GuiEventListener> children = children();
-        p3r_items.removeIf(button -> !children.contains(button) || p3r_isDone(button));
-        p3r_labels.keySet().removeIf(button -> !children.contains(button) || p3r_isDone(button));
-        p3r_selection.keySet().removeIf(button -> !children.contains(button) || p3r_isDone(button));
+        p3r_items.removeIf(button -> !children.contains(button)
+                || p3r_isDone(button) || p3r_isEssentialSettings(button));
+        p3r_labels.keySet().removeIf(button -> !children.contains(button)
+                || p3r_isDone(button) || p3r_isEssentialSettings(button));
+        p3r_selection.keySet().removeIf(button -> !children.contains(button)
+                || p3r_isDone(button) || p3r_isEssentialSettings(button));
         for (GuiEventListener child : children) {
             if (!(child instanceof AbstractWidget button)) {
                 continue;
             }
             // The custom renderer owns visuals; real widgets still provide a
             // scale-correct fallback for pointer, focus, and accessibility input.
+            if (p3r_isEssentialSettings(button)) {
+                button.visible = false;
+                continue;
+            }
             button.visible = true;
             if (p3r_isDone(button)) {
                 p3r_doneWidget = button;
@@ -395,9 +407,23 @@ public abstract class OptionsScreenMixin extends Screen {
     }
 
     @Unique
+    private static boolean p3r_isEssentialSettings(AbstractWidget button) {
+        if (!button.getClass().getName().startsWith("gg.essential.")) {
+            return false;
+        }
+        try {
+            Object id = button.getClass().getMethod("getEssentialId").invoke(button);
+            return "settings".equals(id);
+        } catch (ReflectiveOperationException ignored) {
+            return false;
+        }
+    }
+
+    @Unique
     private void p3r_drawFov(GuiGraphics graphics, Entry entry,
             float selection, float intro) {
-        int color = selection > 0.08F ? P3RGraphics.INK : P3RGraphics.CYAN;
+        int color = selection > 0.08F
+                ? P3RGraphics.configSelectedText() : P3RGraphics.CYAN;
         P3RGraphics.fittedText(graphics, font, P3RGraphics.bold("FOV"),
                 entry.x(), entry.y() + 5.0F * entry.ui(), entry.width() * 0.32F,
                 entry.textScale(), P3RGraphics.alpha(color, intro), false);
@@ -412,7 +438,7 @@ public abstract class OptionsScreenMixin extends Screen {
         graphics.fill(left, y - 2, knobX, y + 2, P3RGraphics.RED);
         int knob = Math.max(4, Math.round(5.0F * entry.ui()));
         graphics.fill(knobX - knob, y - knob, knobX + knob, y + knob,
-                selection > 0.08F ? P3RGraphics.INK : P3RGraphics.WHITE);
+                selection > 0.08F ? P3RGraphics.configSelectedText() : P3RGraphics.WHITE);
         P3RGraphics.fittedText(graphics, font, P3RGraphics.bold(Integer.toString(value)),
                 right - 30.0F * entry.ui(), y - 11.0F * entry.ui(),
                 30.0F * entry.ui(), 0.92F * entry.ui(),

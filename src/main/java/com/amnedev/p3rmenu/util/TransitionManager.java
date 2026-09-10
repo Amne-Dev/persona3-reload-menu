@@ -36,6 +36,9 @@ public class TransitionManager {
     }
 
     public static void startOut(Text label, Runnable action) {
+        if (transitionType != TRANSITION_NONE || action == null) {
+            return;
+        }
         transitionType = TRANSITION_OUT;
         transitionProgress = 0.0f;
         queuedAction = action;
@@ -112,11 +115,14 @@ public class TransitionManager {
                     // hook, which could leave the wipe and GUI input latched forever.
                     Runnable action = queuedAction;
                     queuedAction = null;
-                    action.run();
-                    if (MinecraftClient.getInstance().currentScreen == null) {
-                        clear();
-                    } else if (transitionType == TRANSITION_OUT) {
-                        startIn();
+                    try {
+                        action.run();
+                    } finally {
+                        if (MinecraftClient.getInstance().currentScreen == null) {
+                            clear();
+                        } else if (transitionType == TRANSITION_OUT) {
+                            startIn();
+                        }
                     }
                     return;
                 }

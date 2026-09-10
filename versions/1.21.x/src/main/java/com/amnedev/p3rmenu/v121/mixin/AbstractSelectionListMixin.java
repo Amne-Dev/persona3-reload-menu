@@ -7,6 +7,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.gui.components.OptionsList;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.controls.KeyBindsList;
+import net.minecraft.client.gui.screens.options.controls.KeyBindsScreen;
 import net.minecraft.client.gui.screens.multiplayer.ServerSelectionList;
 import net.minecraft.client.gui.screens.worldselection.WorldSelectionList;
 import org.spongepowered.asm.mixin.Mixin;
@@ -43,7 +45,29 @@ public abstract class AbstractSelectionListMixin {
             float delta, int index, int left, int top, int width, int height,
             CallbackInfo ci) {
         Screen screen = Minecraft.getInstance().screen;
-        if (screen == null || !P3RScreenFamily.isList(screen)) return;
+        boolean keybinds = (Object) this instanceof KeyBindsList
+                && screen instanceof KeyBindsScreen;
+        if (screen == null || !P3RScreenFamily.isList(screen) && !keybinds) return;
+        if (keybinds) {
+            Object entry = ((AbstractSelectionList<?>) (Object) this).children().get(index);
+            if (entry instanceof KeyBindsList.CategoryEntry) {
+                graphics.fill(left, top + 2, left + width, top + height - 2, 0xD5090B18);
+                graphics.fill(left, top + 2, left + width, top + 3, P3RGraphics.CYAN);
+                return;
+            }
+            boolean active = isSelectedItem(index)
+                    || mouseX >= left && mouseX <= left + width
+                    && mouseY >= top && mouseY <= top + height;
+            if (active) {
+                int bottom = top + Math.max(1, height - 2);
+                graphics.fill(left, top, left + width, bottom,
+                        P3RGraphics.configSelectionSurface());
+                graphics.fill(left, top, left + width, top + 2, P3RGraphics.RED);
+                graphics.fill(left, bottom - 1, left + width, bottom, P3RGraphics.PINK);
+                graphics.fill(left, top, left + 2, bottom, P3RGraphics.configSelectedText());
+            }
+            return;
+        }
         boolean selected = isSelectedItem(index);
         boolean hovered = mouseX >= left && mouseX <= left + width
                 && mouseY >= top && mouseY <= top + height;
@@ -60,9 +84,21 @@ public abstract class AbstractSelectionListMixin {
     private void p3r_selection(GuiGraphics graphics, int top, int width,
             int height, int outerColor, int innerColor, CallbackInfo ci) {
         Screen screen = Minecraft.getInstance().screen;
-        if (screen == null || !P3RScreenFamily.isList(screen)) return;
+        boolean keybinds = (Object) this instanceof KeyBindsList
+                && screen instanceof KeyBindsScreen;
+        if (screen == null || !P3RScreenFamily.isList(screen) && !keybinds) return;
         ci.cancel();
         int left = getRowLeft();
+        if (keybinds) {
+            graphics.fill(left, top, left + width,
+                    top + Math.max(1, height - 2), P3RGraphics.configSelectionSurface());
+            graphics.fill(left, top, left + width, top + 2, P3RGraphics.RED);
+            graphics.fill(left, top + height - 3, left + width,
+                    top + height - 2, P3RGraphics.PINK);
+            graphics.fill(left, top, left + 2,
+                    top + Math.max(1, height - 2), P3RGraphics.configSelectedText());
+            return;
+        }
         graphics.fill(left - 4, top - 2, left + width + 4,
                 top + height + 2, 0xF0080CB5);
         graphics.fill(left - 4, top - 2, left + width + 4, top + 1,
@@ -72,7 +108,9 @@ public abstract class AbstractSelectionListMixin {
     @Inject(method = "getRowLeft", at = @At("RETURN"), cancellable = true)
     private void p3r_rowLeft(CallbackInfoReturnable<Integer> cir) {
         Screen screen = Minecraft.getInstance().screen;
-        if ((Object) this instanceof OptionsList && screen != null
+        if ((Object) this instanceof KeyBindsList && screen instanceof KeyBindsScreen) {
+            cir.setReturnValue(P3RGraphics.configContentLeft(screen.width));
+        } else if ((Object) this instanceof OptionsList && screen != null
                 && P3RScreenFamily.isConfiguration(screen)) {
             cir.setReturnValue(Math.round(screen.width * 0.075F));
         } else if ((Object) this instanceof ServerSelectionList
@@ -99,7 +137,9 @@ public abstract class AbstractSelectionListMixin {
     @Inject(method = "scrollBarX", at = @At("RETURN"), cancellable = true)
     private void p3r_scrollbar(CallbackInfoReturnable<Integer> cir) {
         Screen screen = Minecraft.getInstance().screen;
-        if (screen != null && P3RScreenFamily.isStyled(screen)) {
+        if ((Object) this instanceof KeyBindsList && screen instanceof KeyBindsScreen) {
+            cir.setReturnValue(P3RGraphics.configScrollbarX(screen.width, screen.height));
+        } else if (screen != null && P3RScreenFamily.isStyled(screen)) {
             cir.setReturnValue(Math.max(6, Math.round(screen.width * 0.035F)));
         }
     }

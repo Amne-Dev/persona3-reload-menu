@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
@@ -19,6 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractSliderButton.class)
 public abstract class AbstractSliderButtonMixin extends AbstractWidget {
+    @Unique private String p3r_valueTooltip = "";
     @Shadow protected double value;
     @Shadow protected abstract void updateMessage();
     @Shadow protected abstract void applyValue();
@@ -36,7 +38,7 @@ public abstract class AbstractSliderButtonMixin extends AbstractWidget {
         boolean selected = isActive() && (isHovered() || isFocused());
         graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(),
                 !isActive() ? 0x544B536B
-                        : selected ? P3RGraphics.CONFIG_WHITE : 0x24556A93);
+                        : selected ? P3RGraphics.configSelectionSurface() : 0x24556A93);
         if (selected) {
             graphics.fill(getX(), getY(), getX() + getWidth(), getY() + 2, P3RGraphics.RED);
             graphics.fill(getX(), getY(), getX() + 2, getY() + getHeight(), P3RGraphics.PINK);
@@ -52,10 +54,11 @@ public abstract class AbstractSliderButtonMixin extends AbstractWidget {
                 selected ? P3RGraphics.PINK : P3RGraphics.CYAN);
         String message = getMessage().getString();
         int separator = message.indexOf(':');
+        p3r_updateValueTooltip(message, separator);
         Component label = P3RGraphics.bold(
                 (separator > 0 ? message.substring(0, separator) : message).strip());
         int color = !isActive() ? 0xFF7E8AA7
-                : selected ? P3RGraphics.CONFIG_INK : P3RGraphics.CYAN;
+                : selected ? P3RGraphics.configSelectedText() : P3RGraphics.CYAN;
         P3RGraphics.fittedText(graphics, Minecraft.getInstance().font,
                 label, getX() + 7, getY() + getHeight() * 0.52F,
                 Math.max(8, trackLeft - getX() - 14), 1.0F, color, false);
@@ -84,6 +87,14 @@ public abstract class AbstractSliderButtonMixin extends AbstractWidget {
     private boolean p3r_isConfigurationSlider() {
         Screen screen = Minecraft.getInstance().screen;
         return screen != null && P3RScreenFamily.isConfiguration(screen);
+    }
+
+    @Unique
+    private void p3r_updateValueTooltip(String message, int separator) {
+        String valueText = (separator >= 0 ? message.substring(separator + 1) : message).strip();
+        if (valueText.isEmpty() || valueText.equals(p3r_valueTooltip)) return;
+        p3r_valueTooltip = valueText;
+        setTooltip(Tooltip.create(Component.literal(valueText)));
     }
 
     @Unique

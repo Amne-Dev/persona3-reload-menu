@@ -46,7 +46,7 @@ public abstract class AbstractButtonMixin extends AbstractWidget {
         }
         if (settings) {
             int surface = !this.isActive() ? 0x544B536B
-                    : selected ? P3RGraphics.CONFIG_WHITE : 0x24556A93;
+                    : selected ? P3RGraphics.configSelectionSurface() : 0x24556A93;
             graphics.fill(getX(), getY(), getX() + getWidth(), getY() + getHeight(), surface);
             if (selected) {
                 graphics.fill(getX(), getY(), getX() + getWidth(), getY() + 2, P3RGraphics.RED);
@@ -55,7 +55,7 @@ public abstract class AbstractButtonMixin extends AbstractWidget {
             String message = getMessage().getString();
             int separator = message.indexOf(':');
             int color = !this.isActive() ? 0xFF7E8799
-                    : selected ? P3RGraphics.CONFIG_INK : P3RGraphics.CYAN;
+                    : selected ? P3RGraphics.configSelectedText() : P3RGraphics.CYAN;
             if (separator > 0 && separator < message.length() - 1) {
                 Component label = P3RGraphics.bold(message.substring(0, separator).strip());
                 Component value = P3RGraphics.bold(message.substring(separator + 1).strip());

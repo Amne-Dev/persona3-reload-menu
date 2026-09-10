@@ -4,7 +4,6 @@ import com.amnedev.p3rmenu.v262.P3RGraphics;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.LoadingOverlay;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -41,14 +40,6 @@ public abstract class LoadingOverlayMixin {
         if (fadeOutStart > 0L) {
             float seconds = (now - fadeOutStart) / 1000.0F;
             fade = 1.0F - Mth.clamp(seconds - 1.0F, 0.0F, 1.0F);
-            Screen screen = minecraft.gui.screen();
-            if (screen != null) {
-                // Replace the vanilla Mojang fade with the actual destination
-                // screen before compositing the translucent P3R presentation.
-                graphics.nextStratum();
-                screen.extractRenderStateWithTooltipAndSubtitles(
-                        graphics, mouseX, mouseY, delta);
-            }
         }
         if (fade <= 0.001F) return;
 

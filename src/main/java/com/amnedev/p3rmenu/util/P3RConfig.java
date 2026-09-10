@@ -21,6 +21,7 @@ public final class P3RConfig {
 
     private static boolean loaded;
     private static boolean customChat = true;
+    private static boolean nightMode;
 
     private P3RConfig() {
     }
@@ -42,6 +43,19 @@ public final class P3RConfig {
         return customChat;
     }
 
+    public static boolean isNightModeEnabled() {
+        ensureLoaded();
+        return nightMode;
+    }
+
+    public static boolean toggleNightMode() {
+        ensureLoaded();
+        nightMode = !nightMode;
+        VALUES.setProperty("night_mode", Boolean.toString(nightMode));
+        save();
+        return nightMode;
+    }
+
     private static void ensureLoaded() {
         if (loaded) {
             return;
@@ -51,11 +65,13 @@ public final class P3RConfig {
             try (InputStream input = Files.newInputStream(FILE)) {
                 VALUES.load(input);
                 customChat = Boolean.parseBoolean(VALUES.getProperty("custom_chat", "true"));
+                nightMode = Boolean.parseBoolean(VALUES.getProperty("night_mode", "false"));
             } catch (IOException exception) {
                 LOGGER.warn("Could not load {}", FILE, exception);
             }
         }
         VALUES.setProperty("custom_chat", Boolean.toString(customChat));
+        VALUES.setProperty("night_mode", Boolean.toString(nightMode));
     }
 
     private static void save() {

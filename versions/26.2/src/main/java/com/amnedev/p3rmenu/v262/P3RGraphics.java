@@ -31,8 +31,45 @@ public final class P3RGraphics {
     private P3RGraphics() {
     }
 
+    public static int configSelectionSurface() {
+        return P3RConfig.nightMode() ? 0xFF182541 : CONFIG_WHITE;
+    }
+
+    public static int configSelectedText() {
+        return P3RConfig.nightMode() ? 0xFFF5F6F8 : CONFIG_INK;
+    }
+
     public static float scale(int width, int height) {
         return Mth.clamp(Math.min(width / 960.0F, height / 540.0F), 0.72F, 1.65F);
+    }
+
+    public static int configContentLeft(int width) {
+        return Math.max(8, Math.round(width * 0.075F));
+    }
+
+    public static int configContentRight(int width) {
+        return Math.max(configContentLeft(width) + 1, Math.round(width * 0.70F));
+    }
+
+    public static int configContentWidth(int width) {
+        return configContentRight(width) - configContentLeft(width);
+    }
+
+    public static int configScrollbarX(int width, int height) {
+        int railGap = Math.max(18, Math.round(56.0F * scale(width, height)));
+        return Math.max(2, configContentLeft(width) - railGap);
+    }
+
+    public static int keybindListLeft(int width, int height) {
+        return Math.max(0, configScrollbarX(width, height) - 2);
+    }
+
+    public static int keybindListWidth(int width, int height) {
+        return Math.max(1, configContentRight(width) + 2 - keybindListLeft(width, height));
+    }
+
+    public static int keybindListTop(int height) {
+        return Math.max(42, Math.round(height * 0.12F));
     }
 
     public static Component bold(String value) {
@@ -99,11 +136,12 @@ public final class P3RGraphics {
         int panelBottomRight = Math.round(width * 0.770F - slide);
         int panelBottom = footerTop + 2;
         int echo = Math.round(width * 0.045F);
+        boolean night = P3RConfig.nightMode();
         slantedPanel(graphics, panelTopRight + echo, panelBottomRight + echo,
-                panelBottom, 0x6B203271);
+                panelBottom, night ? 0xA0061028 : 0x6B203271);
         slantedPanel(graphics, panelTopRight, panelBottomRight,
-                panelBottom, 0xEAB7C0D8);
-        graphics.fill(0, footerTop, width, height, 0xFFF6F7F8);
+                panelBottom, night ? 0xF0101830 : 0xEAB7C0D8);
+        graphics.fill(0, footerTop, width, height, night ? 0xFF090E20 : 0xFFF6F7F8);
         graphics.fill(0, footerTop, Math.round(width * 0.63F * intro),
                 footerTop + Math.max(2, Math.round(height * 0.004F)), RED);
     }
@@ -140,17 +178,20 @@ public final class P3RGraphics {
         graphics.pose().translate(8.0F * ui, footerTop + 2.0F * ui);
         graphics.pose().scale(6.7F * ui, 6.7F * ui);
         graphics.text(font, bold("CONFIG"), 0, 0,
-                alpha(0xFFAAB0B8, intro * 0.57F), false);
+                alpha(nightModeColor(0xFFAAB0B8, 0xFF405577), intro * 0.57F), false);
         graphics.pose().popMatrix();
         Component controls = bold("ENTER  SELECT     ESC  BACK");
         int right = width - Math.max(12, Math.round(18.0F * ui));
         int controlsY = height - Math.max(12, Math.round(17.0F * ui));
+        int controlsColor = alpha(nightModeColor(0xFF3D5875, 0xFF8DAACA),
+                Math.min(0.88F, intro));
         graphics.text(font, controls, right - font.width(controls), controlsY,
-                alpha(0xFF3D5875, Math.min(0.88F, intro)), true);
+                controlsColor, !isDarkText(controlsColor));
         if (selected != null && !selected.getString().isBlank()) {
+            int selectedColor = alpha(nightModeColor(0xFF222A3E, 0xFFF5F6F8), intro);
             graphics.text(font, selected, selectedRight - font.width(selected),
                     footerTop + Math.max(10, Math.round(12.0F * ui)),
-                    alpha(0xFF222A3E, intro), true);
+                    selectedColor, !isDarkText(selectedColor));
         }
     }
 
@@ -201,7 +242,7 @@ public final class P3RGraphics {
         graphics.fill(x - 3, y - 3, shownRight, y, alpha(RED, eased));
         skewedRect(graphics, x - skew, y,
                 Math.max(1, shownRight - x + skew), height, skew,
-                alpha(CONFIG_WHITE, eased));
+                alpha(configSelectionSurface(), eased));
         graphics.fill(x - 3, y, x, y + height, alpha(PINK, eased));
     }
 
@@ -319,13 +360,24 @@ public final class P3RGraphics {
         graphics.pose().pushMatrix();
         graphics.pose().translate(x, centerY - 4.5F * textScale);
         graphics.pose().scale(textScale, textScale);
-        graphics.text(font, text, 0, 0, color, shadow);
+        graphics.text(font, text, 0, 0, color, shadow && !isDarkText(color));
         graphics.pose().popMatrix();
     }
 
     public static int alpha(int color, float multiplier) {
         int value = Mth.clamp(Math.round((color >>> 24) * Mth.clamp(multiplier, 0.0F, 1.0F)), 0, 255);
         return (value << 24) | (color & 0x00FFFFFF);
+    }
+
+    private static int nightModeColor(int day, int night) {
+        return P3RConfig.nightMode() ? night : day;
+    }
+
+    private static boolean isDarkText(int color) {
+        int red = color >> 16 & 0xFF;
+        int green = color >> 8 & 0xFF;
+        int blue = color & 0xFF;
+        return red * 299 + green * 587 + blue * 114 < 96_000;
     }
 
     public static float easeOut(float value) {

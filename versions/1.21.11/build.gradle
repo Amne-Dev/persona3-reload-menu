@@ -15,7 +15,14 @@ dependencies {
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    productionRuntimeMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
     include implementation("org.sejda.imageio:webp-imageio:0.1.6")
+}
+
+tasks.register("runEssentialClient", net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    group = "fabric"
+    description = "Runs a production-namespace client for Essential compatibility testing."
+    outputs.upToDateWhen { false }
 }
 
 sourceSets {

@@ -2,9 +2,11 @@ package com.amnedev.p3rmenu.v121.mixin;
 
 import com.amnedev.p3rmenu.v121.P3RGraphics;
 import com.amnedev.p3rmenu.v121.Transition;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractButton;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.PlayerSkinWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
@@ -18,6 +20,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,8 +30,16 @@ import java.util.Map;
 
 @Mixin(TitleScreen.class)
 public abstract class TitleScreenMixin extends Screen {
+    @Unique private static final String P3R_ESSENTIAL_PROXY_CLASS =
+            "gg.essential.gui.proxies.EssentialProxyElement";
+    @Unique private static boolean p3r_checkedEssentialProxyClass;
+    @Unique private static Class<?> p3r_essentialProxyClass;
     @Unique private final List<AbstractButton> p3r_main = new ArrayList<>();
     @Unique private final List<AbstractButton> p3r_footer = new ArrayList<>();
+    @Unique private final List<AbstractButton> p3r_passthrough = new ArrayList<>();
+    @Unique private final Map<AbstractButton, String> p3r_essentialActions = new HashMap<>();
+    @Unique private AbstractButton p3r_essentialPlayer;
+    @Unique private PlayerSkinWidget p3r_skinPreview;
     @Unique private final Map<AbstractButton, Component> p3r_labels = new HashMap<>();
     @Unique private final Map<AbstractButton, Float> p3r_selection = new HashMap<>();
     @Unique private int p3r_selected;
@@ -45,6 +57,10 @@ public abstract class TitleScreenMixin extends Screen {
     private void p3r_init(CallbackInfo ci) {
         p3r_main.clear();
         p3r_footer.clear();
+        p3r_passthrough.clear();
+        p3r_essentialActions.clear();
+        p3r_essentialPlayer = null;
+        p3r_skinPreview = null;
         p3r_labels.clear();
         p3r_selection.clear();
         p3r_syncButtons();
@@ -58,10 +74,12 @@ public abstract class TitleScreenMixin extends Screen {
             float delta, CallbackInfo ci) {
         ci.cancel();
         p3r_syncButtons();
+        p3r_prepareEssentialActions(graphics, mouseX, mouseY, delta);
         p3r_updateSelection();
         p3r_updateMouse(mouseX, mouseY);
         P3RGraphics.wallpaper(graphics, width, height);
         graphics.fill(0, 0, width, height, 0x18020A2B);
+        p3r_drawEssentialPlayer(graphics, mouseX, mouseY, delta);
         float logoIntro = P3RGraphics.easeOut((Util.getMillis() - p3r_startedAt) / 620.0F);
         P3RGraphics.logo(graphics, width, height, logoIntro);
         p3r_drawMenu(graphics);
@@ -74,17 +92,51 @@ public abstract class TitleScreenMixin extends Screen {
         List<? extends GuiEventListener> children = children();
         p3r_main.removeIf(button -> !children.contains(button));
         p3r_footer.removeIf(button -> !children.contains(button));
+        p3r_passthrough.removeIf(button -> !children.contains(button));
+        p3r_essentialActions.keySet().removeIf(button -> !children.contains(button));
+        if (p3r_essentialPlayer != null && !children.contains(p3r_essentialPlayer)) {
+            p3r_essentialPlayer = null;
+        }
         p3r_labels.keySet().removeIf(button -> !children.contains(button));
         p3r_selection.keySet().removeIf(button -> !children.contains(button));
         for (GuiEventListener child : children) {
             if (!(child instanceof AbstractButton button)) {
                 continue;
             }
-            // Keep the backing widgets available to Screen's event dispatcher. Their
-            // vanilla rendering is still suppressed by p3r_extract(), while their
-            // bounds are synchronized below with the responsive Persona rows.
-            button.visible = true;
             if (p3r_labels.containsKey(button)) {
+                // Keep P3R-owned backing widgets available to Screen's dispatcher.
+                button.visible = true;
+                continue;
+            }
+            if (p3r_isExternallyManagedWidget(button)) {
+                String id = p3r_essentialId(button);
+                if ("player".equals(id)) {
+                    p3r_essentialPlayer = button;
+                    button.visible = true;
+                    continue;
+                }
+                if (!button.visible) {
+                    if (!p3r_passthrough.contains(button)) p3r_passthrough.add(button);
+                    continue;
+                }
+                String action = p3r_essentialAction(id);
+                String label = p3r_essentialLabel(action);
+                if (action != null && label != null
+                        && !p3r_essentialActions.containsValue(action)) {
+                    p3r_essentialActions.put(button, action);
+                    p3r_labels.put(button, P3RGraphics.bold(label));
+                    if (p3r_isEssentialFooterAction(action)) {
+                        p3r_footer.add(button);
+                    } else {
+                        p3r_main.add(button);
+                    }
+                    button.visible = true;
+                } else if (!p3r_passthrough.contains(button)) {
+                    p3r_passthrough.add(button);
+                }
+                continue;
+            }
+            if (!button.visible) {
                 continue;
             }
             String raw = button.getMessage().getString().strip();
@@ -95,9 +147,14 @@ public abstract class TitleScreenMixin extends Screen {
             if (p3r_isFooter(raw)) {
                 p3r_footer.add(button);
             } else {
-                // Unknown buttons injected by other mods deliberately remain visible.
+                // Unknown buttons injected by other mods remain first-class P3R entries.
                 p3r_main.add(button);
             }
+        }
+        if (p3r_essentialPlayer != null && p3r_skinPreview == null) {
+            p3r_skinPreview = new PlayerSkinWidget(1, 1, minecraft.getEntityModels(),
+                    minecraft.getSkinManager().lookupInsecure(minecraft.getGameProfile()));
+            addRenderableWidget(p3r_skinPreview);
         }
         p3r_selected = Mth.clamp(p3r_selected, 0, Math.max(0, p3r_main.size() - 1));
     }
@@ -181,10 +238,15 @@ public abstract class TitleScreenMixin extends Screen {
         if (buttonCode != GLFW.GLFW_MOUSE_BUTTON_LEFT) {
             return super.mouseClicked(mouseX, mouseY, buttonCode);
         }
+        for (AbstractButton button : p3r_passthrough) {
+            if (button.mouseClicked(mouseX, mouseY, buttonCode)) {
+                return true;
+            }
+        }
         List<Row> rows = p3r_rows();
         for (int index = 0; index < rows.size(); index++) {
             if (rows.get(index).contains(mouseX, mouseY)) {
-                p3r_selected = index;
+                p3r_selected = rows.get(index).sourceIndex();
                 p3r_activate(rows.get(index).button());
                 return true;
             }
@@ -207,6 +269,18 @@ public abstract class TitleScreenMixin extends Screen {
         p3r_lastMouseX = mouseX;
         p3r_lastMouseY = mouseY;
         super.mouseMoved(mouseX, mouseY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (Transition.blocksScreenInput()) {
+            return true;
+        }
+        if (scrollY != 0.0D && !p3r_main.isEmpty()) {
+            p3r_move(scrollY > 0.0D ? -1 : 1);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -246,7 +320,81 @@ public abstract class TitleScreenMixin extends Screen {
             return;
         }
         button.playDownSound(minecraft.getSoundManager());
+        if (p3r_essentialActions.containsKey(button)) {
+            p3r_invokeEssentialAction(button);
+            return;
+        }
         Transition.startOut(p3r_labels.get(button), button::onPress);
+    }
+
+    @Unique
+    private void p3r_prepareEssentialActions(GuiGraphics graphics, int mouseX,
+            int mouseY, float delta) {
+        if (p3r_essentialActions.isEmpty()) return;
+        graphics.enableScissor(0, 0, 0, 0);
+        try {
+            for (AbstractButton button : p3r_essentialActions.keySet()) {
+                button.render(graphics, mouseX, mouseY, delta);
+            }
+        } finally {
+            graphics.disableScissor();
+        }
+    }
+
+    @Unique
+    private void p3r_drawEssentialPlayer(GuiGraphics graphics, int mouseX,
+            int mouseY, float delta) {
+        if (p3r_essentialPlayer == null) return;
+        float ui = P3RGraphics.scale(width, height);
+        int playerHeight = Math.max(1, Math.round(Math.min(height * 0.62F, 360.0F * ui)));
+        int playerWidth = Math.max(1,
+                Math.round(Math.min(width * 0.26F, playerHeight * 0.58F)));
+        int x = Math.round(Math.max(18.0F * ui, width * 0.08F));
+        int y = Math.round(Math.max(76.0F * ui, height * 0.24F));
+        p3r_applyHitbox(p3r_essentialPlayer, x, y, playerWidth, playerHeight);
+        p3r_essentialPlayer.render(graphics, mouseX, mouseY, delta);
+        boolean essentialDrawsPlayer = p3r_hasEssentialPlayerEntity(p3r_essentialPlayer);
+        if (p3r_skinPreview != null) {
+            p3r_skinPreview.visible = !essentialDrawsPlayer;
+            p3r_skinPreview.setPosition(x, y);
+            p3r_skinPreview.setWidth(playerWidth);
+            p3r_skinPreview.setHeight(playerHeight);
+            if (p3r_skinPreview.visible) {
+                p3r_skinPreview.render(graphics, mouseX, mouseY, delta);
+            }
+        }
+    }
+
+    @Unique
+    private static boolean p3r_hasEssentialPlayerEntity(AbstractButton proxy) {
+        try {
+            Object component = proxy.getClass().getMethod("getEssentialComponent").invoke(proxy);
+            if (component == null) return false;
+            return component.getClass().getMethod("getPlayer").invoke(component) != null;
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return false;
+        }
+    }
+
+    @Unique
+    private void p3r_invokeEssentialAction(AbstractButton button) {
+        try {
+            Object component = button.getClass().getMethod("getEssentialComponent").invoke(button);
+            if (component != null) {
+                for (Method method : button.getClass().getMethods()) {
+                    if (method.getName().equals("click") && method.getParameterCount() == 1
+                            && method.getParameterTypes()[0].isInstance(component)) {
+                        method.invoke(button, component);
+                        return;
+                    }
+                }
+            }
+        } catch (InvocationTargetException exception) {
+            p3r_rethrow(exception.getCause());
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            // Fall through to the proxy's vanilla callback for forward compatibility.
+        }
+        button.onPress();
     }
 
     @Unique
@@ -291,7 +439,7 @@ public abstract class TitleScreenMixin extends Screen {
         List<Row> rows = p3r_rows();
         for (int index = 0; index < rows.size(); index++) {
             if (rows.get(index).contains(mouseX, mouseY)) {
-                p3r_select(index);
+                p3r_select(rows.get(index).sourceIndex());
                 return;
             }
         }
@@ -309,8 +457,13 @@ public abstract class TitleScreenMixin extends Screen {
         float bottom = height - Math.max(45.0F, 38.0F * ui);
         float available = Math.max(1.0F, bottom - top);
         float baseStep = 24.5F * ui;
-        float verticalDensity = count <= 1 ? 1.0F
-                : available / ((count - 1) * baseStep);
+        float minimumStep = Math.max(12.0F, baseStep * 0.46F);
+        int maximumVisible = Math.max(1, (int) Math.floor(available / minimumStep) + 1);
+        int visibleCount = Math.min(count, maximumVisible);
+        int firstVisible = Mth.clamp(p3r_selected - visibleCount / 2,
+                0, Math.max(0, count - visibleCount));
+        float verticalDensity = visibleCount <= 1 ? 1.0F
+                : available / ((visibleCount - 1) * baseStep);
         float baseTextScale = 2.75F * ui;
         float widest = 1.0F;
         for (AbstractButton button : p3r_main) {
@@ -321,20 +474,21 @@ public abstract class TitleScreenMixin extends Screen {
         float density = Mth.clamp(Math.min(verticalDensity, horizontalDensity), 0.46F, 1.0F);
         float textScale = baseTextScale * density;
         float step = Math.max(12.0F, baseStep * density);
-        float total = (count - 1) * step;
+        float total = (visibleCount - 1) * step;
         float start = Mth.clamp(height * 0.775F - total * 0.5F,
                 top, Math.max(top, bottom - total));
         float center = Mth.clamp(width * 0.83F, width * 0.62F, width - 68.0F * ui);
-        for (int index = 0; index < count; index++) {
+        for (int slot = 0; slot < visibleCount; slot++) {
+            int index = firstVisible + slot;
             AbstractButton button = p3r_main.get(index);
             float textX = center - font.width(p3r_labels.get(button)) * textScale * 0.5F;
-            float y = start + index * step;
+            float y = start + slot * step;
             float hitPaddingX = Math.max(16.0F, 15.0F * ui);
             float hitX = Math.min(textX - hitPaddingX, width * 0.69F);
             float hitY = y - step * 0.12F;
             float hitWidth = width + 4.0F - hitX;
             p3r_applyHitbox(button, hitX, hitY, hitWidth, step);
-            result.add(new Row(button, textX, y, textScale, ui,
+            result.add(new Row(index, button, textX, y, textScale, ui,
                     hitX, hitY, hitWidth, step));
         }
         return result;
@@ -342,18 +496,37 @@ public abstract class TitleScreenMixin extends Screen {
 
     @Unique
     private List<FooterRow> p3r_footerRows() {
-        float ui = P3RGraphics.scale(width, height);
-        float textScale = Mth.clamp(ui * 0.78F, 0.68F, 1.0F);
-        int gap = Math.round(18.0F * ui);
-        float cursor = width - Math.max(14.0F, 18.0F * ui);
-        float y = height - Math.max(16.0F, 17.0F * ui);
         List<FooterRow> rows = new ArrayList<>();
-        for (int index = p3r_footer.size() - 1; index >= 0; index--) {
-            AbstractButton button = p3r_footer.get(index);
+        if (p3r_footer.isEmpty()) return rows;
+
+        List<AbstractButton> orderedButtons = new ArrayList<>(p3r_footer);
+        orderedButtons.sort((left, right) -> Integer.compare(
+                p3r_footerOrder(left), p3r_footerOrder(right)));
+        java.util.Collections.reverse(orderedButtons);
+
+        float ui = P3RGraphics.scale(width, height);
+        float preferredScale = Mth.clamp(ui * 0.78F, 0.68F, 1.0F);
+        float margin = Math.max(14.0F, 18.0F * ui);
+        float availableWidth = Math.max(1.0F, width - margin * 2.0F);
+        float contentUnits = 0.0F;
+        for (AbstractButton button : orderedButtons) {
+            contentUnits += 9.0F + font.width(p3r_labels.get(button));
+        }
+        int gapCount = Math.max(0, orderedButtons.size() - 1);
+        float preferredGap = 18.0F * preferredScale;
+        float preferredWidth = contentUnits * preferredScale + gapCount * preferredGap;
+        float compression = Math.min(1.0F, availableWidth / Math.max(1.0F, preferredWidth));
+        float gap = Math.max(4.0F, preferredGap * compression);
+        float textScale = Math.min(preferredScale,
+                Math.max(0.01F, (availableWidth - gapCount * gap) / Math.max(1.0F, contentUnits)));
+        float y = height - Math.max(16.0F, 17.0F * ui);
+        float cursor = width - margin;
+        for (int index = orderedButtons.size() - 1; index >= 0; index--) {
+            AbstractButton button = orderedButtons.get(index);
             float contentWidth = (9.0F + font.width(p3r_labels.get(button))) * textScale;
             float x = cursor - contentWidth;
-            p3r_applyHitbox(button, x - 5.0F, y - 5.0F,
-                    contentWidth + 10.0F, 15.0F * textScale + 5.0F);
+            p3r_applyHitbox(button, x - 2.0F, y - 3.0F,
+                    contentWidth + 4.0F, 15.0F * textScale + 3.0F);
             rows.add(0, new FooterRow(button, x, y, contentWidth, textScale));
             cursor = x - gap;
         }
@@ -376,9 +549,84 @@ public abstract class TitleScreenMixin extends Screen {
     }
 
     @Unique
+    private int p3r_footerOrder(AbstractButton button) {
+        if (button.getMessage().getString().toLowerCase(Locale.ROOT).contains("quit")) {
+            return 0;
+        }
+        return "account".equals(p3r_essentialActions.get(button)) ? 1 : 2;
+    }
+
+    @Unique
     private static boolean p3r_hidden(String raw) {
         String value = raw.toLowerCase(Locale.ROOT);
         return value.contains("copyright") || value.contains("do not distribute") || value.equals("tw");
+    }
+
+    @Unique
+    private static boolean p3r_isExternallyManagedWidget(AbstractButton button) {
+        if (!FabricLoader.getInstance().isModLoaded("essential")
+                && !FabricLoader.getInstance().isModLoaded("essential-container")) {
+            return false;
+        }
+        if (!p3r_checkedEssentialProxyClass) {
+            p3r_checkedEssentialProxyClass = true;
+            try {
+                p3r_essentialProxyClass = Class.forName(P3R_ESSENTIAL_PROXY_CLASS, false,
+                        button.getClass().getClassLoader());
+            } catch (ClassNotFoundException | LinkageError ignored) {
+                p3r_essentialProxyClass = null;
+            }
+        }
+        return p3r_essentialProxyClass != null
+                && p3r_essentialProxyClass.isInstance(button);
+    }
+
+    @Unique
+    private static String p3r_essentialId(AbstractButton button) {
+        try {
+            Object value = button.getClass().getMethod("getEssentialId").invoke(button);
+            return value instanceof String id ? id : null;
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            return null;
+        }
+    }
+
+    @Unique
+    private static String p3r_essentialAction(String id) {
+        if (id == null) return null;
+        return switch (id) {
+            case "wardrobe_2" -> "wardrobe";
+            case "invite_host", "world_host", "social", "wardrobe", "pictures",
+                    "settings", "account" -> id;
+            default -> null;
+        };
+    }
+
+    @Unique
+    private static String p3r_essentialLabel(String action) {
+        if (action == null) return null;
+        return switch (action) {
+            case "invite_host" -> "INVITE FRIENDS";
+            case "world_host" -> "HOST WORLD";
+            case "social" -> "SOCIAL";
+            case "wardrobe" -> "WARDROBE";
+            case "pictures" -> "PICTURES";
+            case "settings" -> "ESSENTIAL SETTINGS";
+            case "account" -> "ACCOUNT";
+            default -> null;
+        };
+    }
+
+    @Unique
+    private static boolean p3r_isEssentialFooterAction(String action) {
+        return !"invite_host".equals(action) && !"world_host".equals(action);
+    }
+
+    @Unique
+    private static void p3r_rethrow(Throwable throwable) {
+        if (throwable instanceof RuntimeException runtime) throw runtime;
+        if (throwable instanceof Error error) throw error;
+        throw new RuntimeException(throwable);
     }
 
     @Unique
@@ -388,7 +636,7 @@ public abstract class TitleScreenMixin extends Screen {
     }
 
     @Unique
-    private record Row(AbstractButton button, float textX, float y,
+    private record Row(int sourceIndex, AbstractButton button, float textX, float y,
             float textScale, float uiScale, float hitX, float hitY,
             float hitWidth, float hitHeight) {
         boolean contains(double mouseX, double mouseY) {
@@ -404,8 +652,8 @@ public abstract class TitleScreenMixin extends Screen {
     @Unique
     private record FooterRow(AbstractButton button, float x, float y, float width, float scale) {
         boolean contains(double mouseX, double mouseY) {
-            return mouseX >= x - 5.0F && mouseX <= x + width + 5.0F
-                    && mouseY >= y - 5.0F && mouseY <= y + 15.0F * scale;
+            return mouseX >= x - 2.0F && mouseX <= x + width + 2.0F
+                    && mouseY >= y - 3.0F && mouseY <= y + 15.0F * scale;
         }
     }
 }

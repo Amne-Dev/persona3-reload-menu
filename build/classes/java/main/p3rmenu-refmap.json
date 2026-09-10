@@ -8,6 +8,18 @@
       "init": "Lnet/minecraft/class_408;method_25426()V",
       "render": "Lnet/minecraft/class_408;method_25394(Lnet/minecraft/class_332;IIF)V"
     },
+    "com/amnedev/p3rmenu/mixin/ClickableWidgetAccessor": {
+      "height": "field_22759:I"
+    },
+    "com/amnedev/p3rmenu/mixin/ControlsListWidgetCategoryEntryMixin": {
+      "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)I": "Lnet/minecraft/class_332;method_51439(Lnet/minecraft/class_327;Lnet/minecraft/class_2561;IIIZ)I",
+      "render": "Lnet/minecraft/class_459$class_460;method_25343(Lnet/minecraft/class_332;IIIIIIIZF)V"
+    },
+    "com/amnedev/p3rmenu/mixin/ControlsListWidgetKeyBindingEntryMixin": {
+      "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)I": "Lnet/minecraft/class_332;method_51439(Lnet/minecraft/class_327;Lnet/minecraft/class_2561;IIIZ)I",
+      "Lnet/minecraft/client/gui/widget/ButtonWidget;setX(I)V": "Lnet/minecraft/class_4185;setX(I)V",
+      "render": "Lnet/minecraft/class_459$class_462;method_25343(Lnet/minecraft/class_332;IIIIIIIZF)V"
+    },
     "com/amnedev/p3rmenu/mixin/ControlsListWidgetMixin": {
       "getRowWidth": "Lnet/minecraft/class_459;method_25322()I",
       "getScrollbarPositionX": "Lnet/minecraft/class_459;method_25329()I"
@@ -110,6 +122,18 @@
         "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V": "Lnet/minecraft/class_332;method_25294(IIIII)V",
         "init": "Lnet/minecraft/class_408;method_25426()V",
         "render": "Lnet/minecraft/class_408;method_25394(Lnet/minecraft/class_332;IIF)V"
+      },
+      "com/amnedev/p3rmenu/mixin/ClickableWidgetAccessor": {
+        "height": "field_22759:I"
+      },
+      "com/amnedev/p3rmenu/mixin/ControlsListWidgetCategoryEntryMixin": {
+        "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)I": "Lnet/minecraft/class_332;method_51439(Lnet/minecraft/class_327;Lnet/minecraft/class_2561;IIIZ)I",
+        "render": "Lnet/minecraft/class_459$class_460;method_25343(Lnet/minecraft/class_332;IIIIIIIZF)V"
+      },
+      "com/amnedev/p3rmenu/mixin/ControlsListWidgetKeyBindingEntryMixin": {
+        "Lnet/minecraft/client/gui/DrawContext;drawText(Lnet/minecraft/client/font/TextRenderer;Lnet/minecraft/text/Text;IIIZ)I": "Lnet/minecraft/class_332;method_51439(Lnet/minecraft/class_327;Lnet/minecraft/class_2561;IIIZ)I",
+        "Lnet/minecraft/client/gui/widget/ButtonWidget;setX(I)V": "Lnet/minecraft/class_4185;setX(I)V",
+        "render": "Lnet/minecraft/class_459$class_462;method_25343(Lnet/minecraft/class_332;IIIIIIIZF)V"
       },
       "com/amnedev/p3rmenu/mixin/ControlsListWidgetMixin": {
         "getRowWidth": "Lnet/minecraft/class_459;method_25322()I",

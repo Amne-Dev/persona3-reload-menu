@@ -25,3 +25,4 @@ known-bugs.md
 /run
 /.gradle
 /bin
+/build

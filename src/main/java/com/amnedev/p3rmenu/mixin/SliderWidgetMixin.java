@@ -4,6 +4,7 @@ import com.amnedev.p3rmenu.util.P3RSettingsShell;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.text.Style;
@@ -20,6 +21,8 @@ import java.util.Locale;
 
 @Mixin(SliderWidget.class)
 public abstract class SliderWidgetMixin extends ClickableWidget {
+    @Unique
+    private String p3r_valueTooltip = "";
     @Shadow
     protected double value;
     @Shadow
@@ -46,7 +49,8 @@ public abstract class SliderWidgetMixin extends ClickableWidget {
         int right = x + this.getWidth();
         int bottom = y + this.getHeight();
         context.fill(x, y, right, bottom,
-                !this.active ? 0x544B536B : selected ? P3RSettingsShell.WHITE : 0x24556A93);
+                !this.active ? 0x544B536B
+                        : selected ? P3RSettingsShell.configSelectionSurface() : 0x24556A93);
         if (selected) {
             context.fill(x, y, right, y + 2, P3RSettingsShell.RED);
             context.fill(x, y, x + 2, bottom, P3RSettingsShell.PINK);
@@ -66,11 +70,12 @@ public abstract class SliderWidgetMixin extends ClickableWidget {
 
         String message = this.getMessage().getString();
         int separator = message.indexOf(':');
+        p3r_updateValueTooltip(message, separator);
         String labelText = separator > 0 ? message.substring(0, separator) : message;
         Text label = Text.literal(labelText.strip().toUpperCase(Locale.ROOT))
                 .setStyle(Style.EMPTY.withBold(true));
         int color = !this.active ? 0xFF7E8AA7
-                : selected ? P3RSettingsShell.INK : P3RSettingsShell.CYAN;
+                : selected ? P3RSettingsShell.configSelectedText() : P3RSettingsShell.CYAN;
         P3RSettingsShell.drawFittedText(context, label,
                 x + 7, y + this.getHeight() / 2.0F,
                 Math.max(8, trackLeft - x - 14), color, false);
@@ -97,6 +102,16 @@ public abstract class SliderWidgetMixin extends ClickableWidget {
     private boolean p3r_isSettingsSlider() {
         Screen screen = MinecraftClient.getInstance().currentScreen;
         return screen != null && P3RSettingsShell.isSettingsDetail(screen);
+    }
+
+    @Unique
+    private void p3r_updateValueTooltip(String message, int separator) {
+        String valueText = (separator >= 0 ? message.substring(separator + 1) : message).strip();
+        if (valueText.isEmpty() || valueText.equals(this.p3r_valueTooltip)) {
+            return;
+        }
+        this.p3r_valueTooltip = valueText;
+        this.setTooltip(Tooltip.of(Text.literal(valueText)));
     }
 
     @Unique

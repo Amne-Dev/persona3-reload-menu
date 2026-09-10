@@ -40,10 +40,6 @@ public abstract class LoadingOverlayMixin {
         if (fadeOutStart > 0L) {
             float seconds = (now - fadeOutStart) / 1000.0F;
             fade = 1.0F - Mth.clamp(seconds - 1.0F, 0.0F, 1.0F);
-            if (minecraft.screen != null) {
-                graphics.nextStratum();
-                minecraft.screen.renderWithTooltipAndSubtitles(graphics, mouseX, mouseY, delta);
-            }
         }
         if (fade <= 0.001F) return;
 
