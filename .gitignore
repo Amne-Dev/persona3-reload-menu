@@ -23,3 +23,5 @@ known-bugs.md
 /run
 /run/logs
 /run
+/.gradle
+/bin
